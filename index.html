@@ -139,6 +139,12 @@
         <input id="j1OTMult" type="number" inputmode="decimal" step="0.1" value="1.5" />
         <div class="tiny">1.0=normal, 1.5=time-and-a-half, 2.0=double time.</div>
       </div>
+      <!-- NEW: Overtime hourly override -->
+      <div>
+        <label for="j1OTRateOverride">Overtime hourly rate (optional)</label>
+        <input id="j1OTRateOverride" type="number" inputmode="decimal" placeholder="e.g. 22.50" />
+        <div class="tiny">Overrides base-hourly × multiplier. Use if you don’t enter hours/week or have a fixed OT rate.</div>
+      </div>
     </div>
   </div>
 
@@ -430,9 +436,16 @@ function calc(){
   const j1Hours=parseFloat(document.getElementById('j1Hours').value||'0');
   const j1OTMult=parseFloat(document.getElementById('j1OTMult').value||'1');
   if((!j1Gross||j1Gross===0) && j1Hourly>0 && j1Hours>0) j1Gross=j1Hourly*j1Hours*52;
+
+  // infer base hourly if possible
   let j1BaseHr=j1Hourly;
   if((!j1BaseHr||j1BaseHr===0) && j1Gross>0 && j1Hours>0) j1BaseHr=j1Gross/(j1Hours*52);
-  const j1OTRate=j1BaseHr*j1OTMult;
+
+  // NEW: explicit overtime-rate override
+  const j1OTRateOverride = parseFloat(document.getElementById('j1OTRateOverride').value || '0');
+  const j1OTRate = (j1OTRateOverride && j1OTRateOverride > 0)
+    ? j1OTRateOverride
+    : (j1BaseHr > 0 ? j1BaseHr * j1OTMult : 0);
 
   // Job 2
   const mode=document.getElementById('j2Mode').value;
@@ -511,8 +524,15 @@ function calc(){
   }
   document.getElementById('br_otA').textContent=br_otA;
   document.getElementById('br_otW').textContent=br_otW;
-  document.getElementById('br_notes').innerHTML =
-    `Job 2 taxed at BR 20% in payroll (no Personal Allowance). NI & Student Loan computed per job. Table shows Annual and your selected period (${perKey}).`;
+
+  // Helpful hint if OT rate is missing
+  if(j1OTRate===0){
+    document.getElementById('br_notes').innerHTML =
+      `Enter either Job 1 hours/week (so we can infer base hourly) or set an explicit “Overtime hourly rate” to calculate overtime.`;
+  } else {
+    document.getElementById('br_notes').innerHTML =
+      `Job 2 taxed at BR 20% in payroll (no Personal Allowance). NI & Student Loan computed per job. Table shows Annual and your selected period (${perKey}).`;
+  }
 
   // --- Year-end (combined) ---
   const ye = all_yearEnd(region, basePA, taper, pensionPct, slPlan, j1Gross, j2Gross);
@@ -542,6 +562,42 @@ function calc(){
     `<tr><td>${k}</td><td class="right">£${currency(v||0)}</td><td class="right">£${currency(per(v||0, perKey))}</td></tr>`
   ).join('');
   document.getElementById('ye_netPT').textContent='£'+currency(ye_netPer);
+
+  // Net per OT hour & marginal (YE)
+  if(j1OTRate>0){
+    const before=ye.net;
+    const after=all_yearEnd(region, basePA, taper, pensionPct, slPlan, j1Gross+j1OTRate, j2Gross).net;
+    const keep=after-before; const mr=Math.max(0,Math.min(1,1-(keep/j1OTRate)));
+    document.getElementById('ye_netPerOT').textContent='£'+currency(keep);
+    document.getElementById('ye_marginal').textContent=pct(mr);
+  } else {
+    document.getElementById('ye_netPerOT').textContent='—';
+    document.getElementById('ye_marginal').textContent='—';
+  }
+
+  // OT needed (YE)
+  let ye_otA='—', ye_otW='—';
+  if(targetAnnual>0){
+    if(ye.net>=targetAnnual){ ye_otA='0.00'; ye_otW='0.00'; }
+    else if(j1OTRate>0){
+      const req=solveGrossForTarget(wrapYE({region,basePA,taper,pensionPct,slPlan,j2Gross}), j1Gross, targetAnnual);
+      if(req!=null){
+        const extra=req - j1Gross;
+        ye_otA=(extra/j1OTRate).toLocaleString(undefined,{maximumFractionDigits:2});
+        ye_otW=(extra/j1OTRate/52).toLocaleString(undefined,{maximumFractionDigits:2});
+      }
+    }
+  }
+  document.getElementById('ye_otA').textContent=ye_otA;
+  document.getElementById('ye_otW').textContent=ye_otW;
+
+  // Helpful hint if OT rate is missing
+  if(j1OTRate===0){
+    document.getElementById('ye_notes').innerHTML =
+      `Enter either Job 1 hours/week (so we can infer base hourly) or set an explicit “Overtime hourly rate” to calculate overtime.`;
+  } else {
+    document.getElementById('ye_notes').innerHTML = '';
+  }
 }
 
 // Auto-calc on load if hash present

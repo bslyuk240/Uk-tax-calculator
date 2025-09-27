@@ -30,13 +30,13 @@
   .pill { background:#0f1320; border:1px solid #3a425e; border-radius:10px; padding:10px; }
   .pill b { display:block; font-size:1.05rem; }
   .kpi2 { display:grid; grid-template-columns: 1fr 1fr; gap:10px; }
-  @media (min-width:700px){ .kpi2{ grid-template-columns: repeat(5,1fr);} }
+  @media (min-width:880px){ .kpi2{ grid-template-columns: repeat(7,1fr);} }
 </style>
 </head>
 <body>
 <div class="wrap">
   <h1>UK Take-Home Pay Calculator <span class="tag">2025/26</span></h1>
-  <div class="muted">Tax year: 6 Apr 2025 – 5 Apr 2026. Includes Income Tax, NI, Student Loan, <strong>Employer NI</strong>, Scotland bands, editable Personal Allowance, and overtime needed to hit a target net pay.</div>
+  <div class="muted">Tax year: 6 Apr 2025 – 5 Apr 2026. Includes Income Tax, NI, Student Loan, <strong>Employer NI</strong>, Scotland bands, editable Personal Allowance, target net pay, and overtime hours.</div>
 
   <!-- Inputs -->
   <div class="card">
@@ -58,7 +58,7 @@
       <div>
         <label for="pension">Employee pension (salary sacrifice) %</label>
         <input id="pension" type="number" step="0.1" placeholder="e.g. 5" />
-        <div class="tiny">Assumed to also apply to overtime pay (toggle can be added if you want it excluded).</div>
+        <div class="tiny">Assumed to also apply to overtime pay (ask if you want a toggle to exclude).</div>
       </div>
 
       <div>
@@ -122,12 +122,12 @@
       <div>
         <label for="otMult">Overtime multiplier</label>
         <input id="otMult" type="number" inputmode="decimal" step="0.1" value="1.5" />
-        <div class="tiny">1.5 = “time-and-a-half”, 2 = “double time”.</div>
+        <div class="tiny">1.0 = normal rate, 1.5 = time-and-a-half, 2.0 = double time.</div>
       </div>
 
       <div class="row" style="margin-top:24px;">
         <button class="btn" onclick="calc()">Calculate</button>
-        <div class="tiny">We’ll compute net pay and—if your target is higher—the overtime hours needed to reach it.</div>
+        <div class="tiny">We compute net pay and—if your target is higher—the overtime hours needed to reach it.</div>
       </div>
     </div>
   </div>
@@ -166,6 +166,8 @@
       <div class="pill"><span class="tiny">Extra gross needed (annual)</span><b id="extraGrossA">—</b></div>
       <div class="pill"><span class="tiny">Overtime hours (annual)</span><b id="otHoursA">—</b></div>
       <div class="pill"><span class="tiny">Overtime hours (per week)</span><b id="otHoursW">—</b></div>
+      <div class="pill"><span class="tiny">Net overtime pay per hour</span><b id="netPerOTHour">—</b></div>
+      <div class="pill"><span class="tiny">Implied marginal deduction rate</span><b id="marginalRate">—</b></div>
     </div>
 
     <div class="tiny" id="notes" style="margin-top:8px;"></div>
@@ -174,6 +176,7 @@
 
 <script>
 const currency = n => n.toLocaleString(undefined,{maximumFractionDigits:2, minimumFractionDigits:2});
+const pct = x => (x*100).toLocaleString(undefined,{maximumFractionDigits:1}) + '%';
 const PERIODS = { annual: 1, monthly: 12, weekly: 52 };
 
 // ===== 2025/26 constants =====
@@ -263,9 +266,7 @@ function per(n, perKey){
 }
 
 function netFromGross(params, grossAnnual){
-  const {
-    region, pensionPct, basePA, applyTaper, slPlan
-  } = params;
+  const { region, pensionPct, basePA, applyTaper, slPlan } = params;
   const salSacrifice = Math.max(0, grossAnnual * pensionPct);
   const it = incomeTax(region, grossAnnual, salSacrifice, basePA, applyTaper);
   const eeNI = employeeNI(grossAnnual, salSacrifice);
@@ -278,14 +279,11 @@ function netFromGross(params, grossAnnual){
 // Solve for gross needed to reach target net (annual) via bisection
 function solveGrossForTarget(params, targetNetAnnual, startGross){
   const f = g => netFromGross(params, g).net - targetNetAnnual;
-  let lo = 0, hi = Math.max(startGross * 2, 100000); // start with something sensible
-  // Expand hi until f(hi) >= 0 (net >= target) or cap at 5m
+  let lo = 0, hi = Math.max(startGross * 2, 100000);
   let iter = 0;
   while(f(hi) < 0 && hi < 5_000_000 && iter < 40){ hi *= 2; iter++; }
-  // If even £5m net can't reach (basically impossible), return null
   if(f(hi) < 0) return null;
 
-  // Bisection
   for(let i=0;i<80;i++){
     const mid = (lo + hi) / 2;
     const val = f(mid);
@@ -310,12 +308,12 @@ function calc(){
   const hoursWeek = parseFloat(document.getElementById('hoursWeek').value || '0');
   const otMult = parseFloat(document.getElementById('otMult').value || '1');
 
-  // If gross is blank but hourly & hours/week are provided, infer gross
+  // If gross blank but hourly & hours/week provided, infer gross
   if((!gross || gross === 0) && hourly > 0 && hoursWeek > 0){
     gross = hourly * hoursWeek * 52;
   }
 
-  // If hourly not provided, infer it from gross and contracted hours
+  // If hourly not provided, infer from gross and contracted hours
   let baseHourly = hourly;
   if((!baseHourly || baseHourly === 0) && gross > 0 && hoursWeek > 0){
     baseHourly = gross / (hoursWeek * 52);
@@ -330,7 +328,19 @@ function calc(){
   const erNI = res.erNI;
   const employerCost = (gross - res.salSacrifice) + erNI + res.salSacrifice; // = gross + erNI
 
-  // Target handling
+  // ---- Net overtime pay per hour (marginal) ----
+  // Compute net at current gross, and net at (gross + one OT hour paid at otRate).
+  // Difference equals "net per overtime hour" after tax/NI/SL/pension (since sacrifice assumed to apply).
+  let netPerOT = null, marginalRate = null;
+  if(otRate > 0){
+    const netBefore = net;
+    const after = netFromGross(params, gross + otRate).net;
+    netPerOT = after - netBefore; // £ you actually keep from 1 OT hour
+    const keptFrac = (netPerOT / otRate);
+    marginalRate = Math.max(0, Math.min(1, 1 - keptFrac)); // 0..1
+  }
+
+  // ---- Target handling ----
   const targetAnnual = (targetPer === 'annual') ? targetNet
                       : (targetPer === 'monthly') ? targetNet * 12
                       : targetNet * 52;
@@ -339,22 +349,16 @@ function calc(){
 
   if(targetAnnual > 0){
     if(targetAnnual <= net){
-      requiredGross = gross; // already at/above target
-      gap = 0;
-      extraGross = 0;
-      otHoursAnnual = 0;
-      otHoursWeek = 0;
+      requiredGross = gross;
+      gap = 0; extraGross = 0; otHoursAnnual = 0; otHoursWeek = 0;
     } else {
       requiredGross = solveGrossForTarget(params, targetAnnual, gross);
       if(requiredGross === null){
         gap = targetAnnual - net;
-        extraGross = NaN;
-        otHoursAnnual = NaN;
-        otHoursWeek = NaN;
+        extraGross = NaN; otHoursAnnual = NaN; otHoursWeek = NaN;
       } else {
         gap = Math.max(0, targetAnnual - net);
         extraGross = Math.max(0, requiredGross - gross);
-        // Convert extra gross into overtime hours at overtime rate
         if(otRate > 0){
           otHoursAnnual = extraGross / otRate;
           otHoursWeek = otHoursAnnual / 52;
@@ -398,14 +402,17 @@ function calc(){
   document.getElementById('otHoursA').textContent    = (targetAnnual>0) ? (isNaN(otHoursAnnual)?'—':currency(otHoursAnnual)) : '—';
   document.getElementById('otHoursW').textContent    = (targetAnnual>0) ? (isNaN(otHoursWeek)?'—':currency(otHoursWeek)) : '—';
 
+  // Net overtime per hour & marginal rate
+  document.getElementById('netPerOTHour').textContent = (netPerOT==null)? '—' : '£'+currency(netPerOT);
+  document.getElementById('marginalRate').textContent = (marginalRate==null)? '—' : pct(marginalRate);
+
   document.getElementById('notes').innerHTML =
     `Notes:
-     • Personal Allowance is editable and can be auto-tapered above £100,000.
-     • Scottish vs rUK income tax bands applied after PA.
-     • Employee NI: 8% between £12,570–£50,270, then 2%.
-     • Employer NI: 13.8% above £9,100 (no upper limit). Calculated on post-sacrifice pay.
-     • Overtime need is solved by finding the gross required to meet your target net, then converting the excess gross to hours at your overtime rate.
-     • Assumes salary-sacrifice pension % also applies to overtime (can add toggle to exclude).`;
+     • Overtime multiplier boosts your hourly rate (e.g., 1.5× = time-and-a-half).
+     • Overtime pay is taxed the same as normal pay: Income Tax, NI, and Student Loan (if applicable) all apply.
+     • “Net overtime pay per hour” is the <em>extra take-home</em> from one hour of overtime, computed as: net(gross + 1 OT hour) − net(gross).
+     • “Implied marginal deduction rate” shows how much of that overtime hour is lost to tax/NI/SL/pension (1 − net-per-hour ÷ overtime rate).
+     • Assumes salary-sacrifice pension % also applies to overtime (ask if you’d like a toggle to exclude).`;
 }
 </script>
 </body>

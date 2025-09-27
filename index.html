@@ -1,0 +1,412 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>UK Take-Home Pay Calculator (2025/26) + Overtime to Target</title>
+<style>
+  :root { --gap: 12px; --radius: 10px; }
+  body { font: 16px/1.4 system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; margin:0; background:#0b0d12; color:#e9eef7; }
+  .wrap { max-width: 980px; margin: 0 auto; padding: 24px; }
+  h1 { font-size: 1.6rem; margin: 0 0 6px; }
+  .card { background: #131826; border: 1px solid #293047; border-radius: var(--radius); padding: 16px; margin-top: var(--gap); }
+  .grid { display:grid; grid-template-columns: 1fr; gap: var(--gap); }
+  @media (min-width:980px){ .grid{ grid-template-columns: 1fr 1fr; } }
+  label { display:block; font-weight:600; margin-bottom:6px; }
+  input, select { width:100%; padding:10px 12px; border-radius:8px; border:1px solid #3a425e; background:#0f1320; color:#e9eef7; }
+  .muted { color:#a8b3cf; font-size:0.92rem; }
+  .row { display:flex; flex-wrap:wrap; gap:10px; align-items:center; }
+  .btn { cursor:pointer; background:#3b82f6; border:0; color:white; padding:10px 14px; border-radius:8px; font-weight:600; }
+  .btn:active { transform: translateY(1px); }
+  table { width:100%; border-collapse: collapse; margin-top: 8px; }
+  th, td { text-align:left; padding: 10px 8px; border-bottom:1px solid #2a324a; }
+  .right { text-align:right; }
+  .tag { display:inline-block; padding:2px 8px; border:1px solid #3a425e; border-radius:999px; font-size:12px; color:#c9d6ff; }
+  .tiny { font-size:12px; color:#93a0bc; }
+  .total { font-weight:800; }
+  .hr { height:1px; background:#2a324a; margin:10px 0; }
+  .kpi { display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-top:10px; }
+  @media (min-width:700px){ .kpi{ grid-template-columns: repeat(4,1fr);} }
+  .pill { background:#0f1320; border:1px solid #3a425e; border-radius:10px; padding:10px; }
+  .pill b { display:block; font-size:1.05rem; }
+  .kpi2 { display:grid; grid-template-columns: 1fr 1fr; gap:10px; }
+  @media (min-width:700px){ .kpi2{ grid-template-columns: repeat(5,1fr);} }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>UK Take-Home Pay Calculator <span class="tag">2025/26</span></h1>
+  <div class="muted">Tax year: 6 Apr 2025 – 5 Apr 2026. Includes Income Tax, NI, Student Loan, <strong>Employer NI</strong>, Scotland bands, editable Personal Allowance, and overtime needed to hit a target net pay.</div>
+
+  <!-- Inputs -->
+  <div class="card">
+    <div class="grid">
+      <div>
+        <label for="region">Tax region</label>
+        <select id="region">
+          <option value="rUK">England/Wales/Northern Ireland (rUK)</option>
+          <option value="Scotland">Scotland</option>
+        </select>
+      </div>
+
+      <div>
+        <label for="gross">Annual gross pay (£)</label>
+        <input id="gross" type="number" inputmode="decimal" placeholder="e.g. 36000" />
+        <div class="tiny">If you only know hourly + hours/week, you can leave this and we’ll infer it.</div>
+      </div>
+
+      <div>
+        <label for="pension">Employee pension (salary sacrifice) %</label>
+        <input id="pension" type="number" step="0.1" placeholder="e.g. 5" />
+        <div class="tiny">Assumed to also apply to overtime pay (toggle can be added if you want it excluded).</div>
+      </div>
+
+      <div>
+        <label for="pa">Personal Allowance (£)</label>
+        <input id="pa" type="number" inputmode="decimal" value="12570" />
+        <div class="row tiny" style="margin-top:6px;">
+          <input id="taper" type="checkbox" checked /> <label for="taper" style="margin:0;">Apply taper above £100,000</label>
+        </div>
+      </div>
+
+      <div>
+        <label for="sl">Student loan plan</label>
+        <select id="sl">
+          <option value="none">None</option>
+          <option value="plan1">Plan 1 (£26,065)</option>
+          <option value="plan2">Plan 2 (£28,470)</option>
+          <option value="plan4">Plan 4 (£32,745)</option>
+          <option value="pgl">Postgrad (6% over £21,000)</option>
+          <option value="plan5">Plan 5 (£25,000) — mainly 2026/27</option>
+        </select>
+      </div>
+
+      <div>
+        <label for="per">Display pay per</label>
+        <select id="per">
+          <option value="annual">Annual</option>
+          <option value="monthly">Monthly</option>
+          <option value="weekly">Weekly</option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <!-- Target & Overtime -->
+  <div class="card">
+    <h3 style="margin:0 0 10px;">Target take-home & Overtime calculator</h3>
+    <div class="grid">
+      <div>
+        <label for="targetNet">Target net pay (after tax)</label>
+        <input id="targetNet" type="number" inputmode="decimal" placeholder="e.g. 2500" />
+      </div>
+      <div>
+        <label for="targetPer">Target is per</label>
+        <select id="targetPer">
+          <option value="monthly">Monthly</option>
+          <option value="weekly">Weekly</option>
+          <option value="annual">Annual</option>
+        </select>
+      </div>
+
+      <div>
+        <label for="hourly">Base hourly rate (£/hr)</label>
+        <input id="hourly" type="number" inputmode="decimal" placeholder="e.g. 15" />
+        <div class="tiny">If blank, we’ll infer from gross ÷ (hours/week × 52).</div>
+      </div>
+      <div>
+        <label for="hoursWeek">Contracted hours per week</label>
+        <input id="hoursWeek" type="number" inputmode="decimal" placeholder="e.g. 37.5" />
+      </div>
+
+      <div>
+        <label for="otMult">Overtime multiplier</label>
+        <input id="otMult" type="number" inputmode="decimal" step="0.1" value="1.5" />
+        <div class="tiny">1.5 = “time-and-a-half”, 2 = “double time”.</div>
+      </div>
+
+      <div class="row" style="margin-top:24px;">
+        <button class="btn" onclick="calc()">Calculate</button>
+        <div class="tiny">We’ll compute net pay and—if your target is higher—the overtime hours needed to reach it.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Results -->
+  <div id="results" class="card" style="display:none;">
+    <h2 style="margin:0 0 8px;">Results</h2>
+
+    <div class="kpi">
+      <div class="pill"><span class="tiny">Net (annual)</span><b id="netA">—</b></div>
+      <div class="pill"><span class="tiny">Net (per selected period)</span><b id="netP">—</b></div>
+      <div class="pill"><span class="tiny">Employer NI (annual)</span><b id="erNIA">—</b></div>
+      <div class="pill"><span class="tiny">Total Employer Cost (annual)</span><b id="erCostA">—</b></div>
+    </div>
+
+    <div class="hr"></div>
+
+    <div id="summary" class="muted"></div>
+
+    <table>
+      <thead>
+        <tr><th>Item</th><th class="right">Annual (£)</th><th class="right">Per period</th></tr>
+      </thead>
+      <tbody id="breakdown"></tbody>
+      <tfoot>
+        <tr><td class="total">Take-home pay</td><td class="right total" id="netA2"></td><td class="right total" id="netP2"></td></tr>
+      </tfoot>
+    </table>
+
+    <div class="hr"></div>
+
+    <h3 style="margin:0 0 6px;">Overtime needed to hit target</h3>
+    <div class="kpi2">
+      <div class="pill"><span class="tiny">Target net (annualised)</span><b id="tgtNetA">—</b></div>
+      <div class="pill"><span class="tiny">Gap to target (annual)</span><b id="gapA">—</b></div>
+      <div class="pill"><span class="tiny">Extra gross needed (annual)</span><b id="extraGrossA">—</b></div>
+      <div class="pill"><span class="tiny">Overtime hours (annual)</span><b id="otHoursA">—</b></div>
+      <div class="pill"><span class="tiny">Overtime hours (per week)</span><b id="otHoursW">—</b></div>
+    </div>
+
+    <div class="tiny" id="notes" style="margin-top:8px;"></div>
+  </div>
+</div>
+
+<script>
+const currency = n => n.toLocaleString(undefined,{maximumFractionDigits:2, minimumFractionDigits:2});
+const PERIODS = { annual: 1, monthly: 12, weekly: 52 };
+
+// ===== 2025/26 constants =====
+const RUK_BANDS = [
+  { upTo: 50270, rate: 0.20 },
+  { upTo: 125140, rate: 0.40 },
+  { upTo: Infinity, rate: 0.45 },
+];
+
+const SCO_BANDS = [
+  { upTo: 15397,  rate: 0.19 },
+  { upTo: 27491,  rate: 0.20 },
+  { upTo: 43662,  rate: 0.21 },
+  { upTo: 75000,  rate: 0.42 },
+  { upTo: 125140, rate: 0.45 },
+  { upTo: Infinity, rate: 0.48 },
+];
+
+// Employee NI thresholds (annual)
+const NI_PT = 12570;
+const NI_UEL = 50270;
+const EE_NI_MAIN = 0.08;
+const EE_NI_ADDL = 0.02;
+
+// Employer NI (Class 1 secondary)
+const ER_ST = 9100;
+const ER_RATE = 0.138;
+
+// Student loans
+const SL = {
+  plan1: { threshold: 26065, rate: 0.09 },
+  plan2: { threshold: 28470, rate: 0.09 },
+  plan4: { threshold: 32745, rate: 0.09 },
+  plan5: { threshold: 25000, rate: 0.09 },
+  pgl:   { threshold: 21000, rate: 0.06 }
+};
+
+function taperedPA(basePA, applyTaper, adjustedNetIncome){
+  if(!applyTaper) return basePA;
+  if(adjustedNetIncome <= 100000) return basePA;
+  const reduction = Math.floor((adjustedNetIncome - 100000) / 2);
+  return Math.max(0, basePA - reduction);
+}
+
+function incomeTax(region, gross, salSacrifice, basePA, applyTaper){
+  const adjNetIncome = Math.max(0, gross - salSacrifice);
+  const PA = taperedPA(basePA, applyTaper, adjNetIncome);
+  const taxable = Math.max(0, (gross - salSacrifice) - PA);
+
+  let tax = 0;
+  const bands = (region === 'rUK') ? RUK_BANDS : SCO_BANDS;
+  let prev = 0;
+  for(const band of bands){
+    const amount = Math.max(0, Math.min(taxable, band.upTo - prev));
+    tax += amount * band.rate;
+    prev = band.upTo;
+    if(taxable <= band.upTo) break;
+  }
+  return { tax, PA, taxable };
+}
+
+function employeeNI(gross, salSacrifice){
+  const niGross = Math.max(0, gross - salSacrifice);
+  if(niGross <= NI_PT) return 0;
+  const atMain = Math.max(0, Math.min(niGross, NI_UEL) - NI_PT);
+  const aboveUEL = Math.max(0, niGross - NI_UEL);
+  return atMain * EE_NI_MAIN + aboveUEL * EE_NI_ADDL;
+}
+
+function employerNI(gross, salSacrifice){
+  const erGross = Math.max(0, gross - salSacrifice);
+  const aboveST = Math.max(0, erGross - ER_ST);
+  return aboveST * ER_RATE;
+}
+
+function studentLoan(plan, gross, salSacrifice){
+  if(plan === 'none') return 0;
+  const cfg = SL[plan];
+  const repayIncome = Math.max(0, (gross - salSacrifice) - cfg.threshold);
+  return repayIncome * cfg.rate;
+}
+
+function per(n, perKey){
+  if(perKey === 'annual') return n;
+  const div = PERIODS[perKey];
+  return n / div;
+}
+
+function netFromGross(params, grossAnnual){
+  const {
+    region, pensionPct, basePA, applyTaper, slPlan
+  } = params;
+  const salSacrifice = Math.max(0, grossAnnual * pensionPct);
+  const it = incomeTax(region, grossAnnual, salSacrifice, basePA, applyTaper);
+  const eeNI = employeeNI(grossAnnual, salSacrifice);
+  const sl = studentLoan(slPlan, grossAnnual, salSacrifice);
+  const net = Math.max(0, grossAnnual - (salSacrifice + it.tax + eeNI + sl));
+  const erNI = employerNI(grossAnnual, salSacrifice);
+  return { net, it, eeNI, sl, salSacrifice, erNI };
+}
+
+// Solve for gross needed to reach target net (annual) via bisection
+function solveGrossForTarget(params, targetNetAnnual, startGross){
+  const f = g => netFromGross(params, g).net - targetNetAnnual;
+  let lo = 0, hi = Math.max(startGross * 2, 100000); // start with something sensible
+  // Expand hi until f(hi) >= 0 (net >= target) or cap at 5m
+  let iter = 0;
+  while(f(hi) < 0 && hi < 5_000_000 && iter < 40){ hi *= 2; iter++; }
+  // If even £5m net can't reach (basically impossible), return null
+  if(f(hi) < 0) return null;
+
+  // Bisection
+  for(let i=0;i<80;i++){
+    const mid = (lo + hi) / 2;
+    const val = f(mid);
+    if(Math.abs(val) < 0.01) return mid;
+    if(val < 0) lo = mid; else hi = mid;
+  }
+  return (lo + hi) / 2;
+}
+
+function calc(){
+  const region = document.getElementById('region').value;
+  let gross = parseFloat(document.getElementById('gross').value || '0');
+  const pensionPct = Math.max(0, parseFloat(document.getElementById('pension').value || '0') / 100);
+  const basePA = Math.max(0, parseFloat(document.getElementById('pa').value || '0'));
+  const applyTaper = document.getElementById('taper').checked;
+  const slPlan = document.getElementById('sl').value;
+  const perKey = document.getElementById('per').value;
+
+  const targetNet = parseFloat(document.getElementById('targetNet').value || '0');
+  const targetPer = document.getElementById('targetPer').value;
+  const hourly = parseFloat(document.getElementById('hourly').value || '0');
+  const hoursWeek = parseFloat(document.getElementById('hoursWeek').value || '0');
+  const otMult = parseFloat(document.getElementById('otMult').value || '1');
+
+  // If gross is blank but hourly & hours/week are provided, infer gross
+  if((!gross || gross === 0) && hourly > 0 && hoursWeek > 0){
+    gross = hourly * hoursWeek * 52;
+  }
+
+  // If hourly not provided, infer it from gross and contracted hours
+  let baseHourly = hourly;
+  if((!baseHourly || baseHourly === 0) && gross > 0 && hoursWeek > 0){
+    baseHourly = gross / (hoursWeek * 52);
+  }
+  const otRate = baseHourly * otMult;
+
+  const params = { region, pensionPct, basePA, applyTaper, slPlan };
+
+  // Current net and employer cost
+  const res = netFromGross(params, gross);
+  const net = res.net;
+  const erNI = res.erNI;
+  const employerCost = (gross - res.salSacrifice) + erNI + res.salSacrifice; // = gross + erNI
+
+  // Target handling
+  const targetAnnual = (targetPer === 'annual') ? targetNet
+                      : (targetPer === 'monthly') ? targetNet * 12
+                      : targetNet * 52;
+
+  let requiredGross = null, extraGross = 0, otHoursAnnual = 0, otHoursWeek = 0, gap = 0;
+
+  if(targetAnnual > 0){
+    if(targetAnnual <= net){
+      requiredGross = gross; // already at/above target
+      gap = 0;
+      extraGross = 0;
+      otHoursAnnual = 0;
+      otHoursWeek = 0;
+    } else {
+      requiredGross = solveGrossForTarget(params, targetAnnual, gross);
+      if(requiredGross === null){
+        gap = targetAnnual - net;
+        extraGross = NaN;
+        otHoursAnnual = NaN;
+        otHoursWeek = NaN;
+      } else {
+        gap = Math.max(0, targetAnnual - net);
+        extraGross = Math.max(0, requiredGross - gross);
+        // Convert extra gross into overtime hours at overtime rate
+        if(otRate > 0){
+          otHoursAnnual = extraGross / otRate;
+          otHoursWeek = otHoursAnnual / 52;
+        } else {
+          otHoursAnnual = NaN; otHoursWeek = NaN;
+        }
+      }
+    }
+  }
+
+  // ===== Render =====
+  document.getElementById('results').style.display = 'block';
+  document.getElementById('summary').innerHTML =
+    `Region: <strong>${region}</strong> • Gross: <strong>£${currency(gross)}</strong> • PA used: <strong>£${currency(res.it.PA)}</strong> • Pension (sacrifice): <strong>£${currency(res.salSacrifice)}</strong>`;
+
+  const rows = [
+    ['Income Tax', res.it.tax],
+    ['Employee NI', res.eeNI],
+    ['Student Loan', res.sl],
+    ['Pension (salary sacrifice)', res.salSacrifice],
+    ['Employer NI (for info)', erNI],
+    ['Gross pay', gross],
+  ];
+  const tbody = document.getElementById('breakdown');
+  tbody.innerHTML = rows.map(([k,v]) =>
+    `<tr><td>${k}</td><td class="right">£${currency(v)}</td><td class="right">£${currency(per(v, perKey))}</td></tr>`
+  ).join('');
+
+  document.getElementById('netA').textContent  = '£' + currency(net);
+  document.getElementById('netP').textContent  = '£' + currency(per(net, perKey));
+  document.getElementById('netA2').textContent = '£' + currency(net);
+  document.getElementById('netP2').textContent = '£' + currency(per(net, perKey));
+
+  document.getElementById('erNIA').textContent = '£' + currency(erNI);
+  document.getElementById('erCostA').textContent = '£' + currency(employerCost);
+
+  // Target KPIs
+  document.getElementById('tgtNetA').textContent = (targetAnnual>0) ? '£'+currency(targetAnnual) : '—';
+  document.getElementById('gapA').textContent    = (targetAnnual>0) ? '£'+currency(gap) : '—';
+  document.getElementById('extraGrossA').textContent = (targetAnnual>0) ? (isNaN(extraGross)?'—':'£'+currency(extraGross)) : '—';
+  document.getElementById('otHoursA').textContent    = (targetAnnual>0) ? (isNaN(otHoursAnnual)?'—':currency(otHoursAnnual)) : '—';
+  document.getElementById('otHoursW').textContent    = (targetAnnual>0) ? (isNaN(otHoursWeek)?'—':currency(otHoursWeek)) : '—';
+
+  document.getElementById('notes').innerHTML =
+    `Notes:
+     • Personal Allowance is editable and can be auto-tapered above £100,000.
+     • Scottish vs rUK income tax bands applied after PA.
+     • Employee NI: 8% between £12,570–£50,270, then 2%.
+     • Employer NI: 13.8% above £9,100 (no upper limit). Calculated on post-sacrifice pay.
+     • Overtime need is solved by finding the gross required to meet your target net, then converting the excess gross to hours at your overtime rate.
+     • Assumes salary-sacrifice pension % also applies to overtime (can add toggle to exclude).`;
+}
+</script>
+</body>
+</html>

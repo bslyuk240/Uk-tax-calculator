@@ -36,21 +36,42 @@
   .warn { color:#ffd27d; }
   .page { display:none; }
   .page.active { display:block; }
+  .no-print { display:inherit; }
+  .print-only { display:none; }
+
+  /* ---------- Print (compact A4) ---------- */
+  @media print {
+    @page { size: A4; margin: 12mm; }
+    body { background:white; color:#000; }
+    .wrap { max-width:none; padding:0; }
+    .no-print, .tabs, .tag, .btn, .ghost, .card .row:has(button), .card .row:has(a) { display:none !important; }
+    .card { background:white; border:none; padding:0; margin:0 0 10mm 0; }
+    .pill { border:1px solid #000; border-radius:6px; }
+    .hr { background:#000; opacity:0.2; margin:6mm 0 4mm; }
+    table { margin-top:4mm; }
+    th, td { border-bottom:1px solid #000; padding:4px 6px; font-size:12px; }
+    h1 { font-size:18px; margin:0 0 2mm; color:#000; }
+    h2 { font-size:14px; margin:0 0 2mm; color:#000; }
+    .muted, .tiny { color:#000; }
+    .page { display:none !important; }
+    .page.active { display:block !important; }
+    .print-only { display:block; }
+  }
 </style>
 </head>
 <body>
 <div class="wrap">
-  <h1>UK Two-Job Take-Home Calculator <span class="tag">2025/26</span></h1>
-  <div class="muted">Scotland supported • Two jobs • Student loan • Employer NI • Overtime solver • <strong>Payslip (Job 2 on BR)</strong> vs <strong>Year-end (combined)</strong>. Per-period view shows <em>Monthly</em> or <em>Weekly</em>.</div>
+  <h1>UK Two-Job Take-Home Calculator <span class="tag no-print">2025/26</span></h1>
+  <div class="muted no-print">Scotland supported • Two jobs • Student loan • Employer NI • Overtime solver • <strong>Payslip (Job 2 on BR)</strong> vs <strong>Year-end (combined)</strong>. Per-period view shows <em>Monthly</em> or <em>Weekly</em>.</div>
 
   <!-- Quick nav -->
-  <div class="tabs">
+  <div class="tabs no-print">
     <a class="tab" id="tabPayslip" href="#payslip">Payslip view</a>
     <a class="tab" id="tabYearend" href="#yearend">Year-end view</a>
   </div>
 
   <!-- Global settings -->
-  <div class="card">
+  <div class="card no-print">
     <h2>Global settings</h2>
     <div class="grid grid-3">
       <div>
@@ -91,13 +112,13 @@
           <option value="weekly">Weekly</option>
           <option value="annual">Annual</option>
         </select>
-        <div class="tiny">Tables now show both Annual and your selected period.</div>
+        <div class="tiny">Tables show both Annual and your selected period.</div>
       </div>
     </div>
   </div>
 
   <!-- Job 1 -->
-  <div class="card">
+  <div class="card no-print">
     <h2>Job 1 — Main employer (with your tax code)</h2>
     <div class="grid grid-3">
       <div>
@@ -122,7 +143,7 @@
   </div>
 
   <!-- Job 2 -->
-  <div class="card">
+  <div class="card no-print">
     <h2>Job 2 — Second/part-time job (visa cap ≤ 20 hrs/week)</h2>
     <div class="grid grid-3">
       <div>
@@ -145,13 +166,13 @@
         <input id="j2Gross" type="number" inputmode="decimal" placeholder="e.g. 15600" />
       </div>
       <div class="row tiny" style="grid-column:1/-1;">
-        <span class="warn">In Payslip view</span> Job 2 is BR 20% from £1 (no PA). NI is always per job. <span class="warn">Year-end view</span> pools incomes for true combined bands.
+        <span class="warn">Payslip view:</span> Job 2 taxed on BR 20% (no PA). NI always per job. <span class="warn">Year-end view:</span> pooled for true combined bands.
       </div>
     </div>
   </div>
 
   <!-- Target -->
-  <div class="card">
+  <div class="card no-print">
     <h2>Target take-home & Overtime (from Job 1)</h2>
     <div class="grid grid-3">
       <div>
@@ -173,10 +194,21 @@
     </div>
   </div>
 
+  <!-- Print header (compact) -->
+  <div class="print-only" id="printHeader" style="margin-bottom:6mm;">
+    <h1>Two-Job Take-Home — <span id="printViewLabel">Payslip</span></h1>
+    <div style="font-size:12px;">
+      <div id="printSummary"></div>
+    </div>
+  </div>
+
   <!-- Payslip page -->
   <div id="pagePayslip" class="page">
     <div class="card">
-      <h2>Payslip view (Job 2 on BR 20%)</h2>
+      <div class="row no-print" style="justify-content:space-between; align-items:center;">
+        <h2>Payslip view (Job 2 on BR 20%)</h2>
+        <button class="btn" onclick="printCurrent('Payslip')">Print this page</button>
+      </div>
       <div class="kpi">
         <div class="pill"><span class="tiny">Combined net (annual)</span><b id="br_netA">—</b></div>
         <div class="pill"><span class="tiny">Combined net (per selected)</span><b id="br_netP">—</b></div>
@@ -188,18 +220,11 @@
 
       <table>
         <thead>
-          <tr>
-            <th>Item</th>
-            <th class="right">Annual (£)</th>
-            <th class="right">Per (selected)</th>
-          </tr>
+          <tr><th>Item</th><th class="right">Annual (£)</th><th class="right">Per (selected)</th></tr>
         </thead>
         <tbody id="br_rows"></tbody>
         <tfoot>
-          <tr>
-            <td class="right" colspan="2"><strong>Combined net</strong></td>
-            <td class="right"><strong id="br_netPT">—</strong></td>
-          </tr>
+          <tr><td class="right" colspan="2"><strong>Combined net</strong></td><td class="right"><strong id="br_netPT">—</strong></td></tr>
         </tfoot>
       </table>
 
@@ -219,7 +244,10 @@
   <!-- Year-end page -->
   <div id="pageYearend" class="page">
     <div class="card">
-      <h2>Year-end view (true combined tax bands)</h2>
+      <div class="row no-print" style="justify-content:space-between; align-items:center;">
+        <h2>Year-end view (true combined tax bands)</h2>
+        <button class="btn" onclick="printCurrent('Year-end')">Print this page</button>
+      </div>
       <div class="kpi">
         <div class="pill"><span class="tiny">Combined net (annual)</span><b id="ye_netA">—</b></div>
         <div class="pill"><span class="tiny">Combined net (per selected)</span><b id="ye_netP">—</b></div>
@@ -231,18 +259,11 @@
 
       <table>
         <thead>
-          <tr>
-            <th>Item</th>
-            <th class="right">Annual (£)</th>
-            <th class="right">Per (selected)</th>
-          </tr>
+          <tr><th>Item</th><th class="right">Annual (£)</th><th class="right">Per (selected)</th></tr>
         </thead>
         <tbody id="ye_rows"></tbody>
         <tfoot>
-          <tr>
-            <td class="right" colspan="2"><strong>Combined net</strong></td>
-            <td class="right"><strong id="ye_netPT">—</strong></td>
-          </tr>
+          <tr><td class="right" colspan="2"><strong>Combined net</strong></td><td class="right"><strong id="ye_netPT">—</strong></td></tr>
         </tfoot>
       </table>
 
@@ -267,9 +288,7 @@ const PERIODS = { annual:1, monthly:12, weekly:52 };
 
 // --- 2025/26 core parameters ---
 const RUK_BANDS = [
-  { upTo: 50270,  rate: 0.20 },
-  { upTo: 125140, rate: 0.40 },
-  { upTo: Infinity, rate: 0.45 },
+  { upTo: 50270,  rate: 0.20 }, { upTo: 125140, rate: 0.40 }, { upTo: Infinity, rate: 0.45 },
 ];
 const SCO_BANDS = [
   { upTo: 15397,  rate: 0.19 }, { upTo: 27491,  rate: 0.20 },
@@ -285,12 +304,7 @@ const SL = {
   pgl:{threshold:21000,rate:0.06}
 };
 
-function taperedPA(basePA, applyTaper, ANI){
-  if(!applyTaper) return basePA;
-  if(ANI<=100000) return basePA;
-  const reduction=Math.floor((ANI-100000)/2);
-  return Math.max(0, basePA - reduction);
-}
+function taperedPA(basePA, applyTaper, ANI){ if(!applyTaper) return basePA; if(ANI<=100000) return basePA; const r=Math.floor((ANI-100000)/2); return Math.max(0, basePA-r); }
 function bands(region){ return region==='rUK'? RUK_BANDS : SCO_BANDS; }
 function IT_from_taxable(region, taxable){
   let tax=0, prev=0;
@@ -300,13 +314,7 @@ function IT_from_taxable(region, taxable){
     if(taxable<=b.upTo) break;
   } return tax;
 }
-function eeNI(gross, sac){
-  const g=Math.max(0,gross-sac);
-  if(g<=NI_PT) return 0;
-  const atMain=Math.max(0,Math.min(g,NI_UEL)-NI_PT);
-  const above=Math.max(0,g-NI_UEL);
-  return atMain*EE_MAIN + above*EE_ADDL;
-}
+function eeNI(gross, sac){ const g=Math.max(0,gross-sac); if(g<=NI_PT) return 0; const atM=Math.max(0,Math.min(g,NI_UEL)-NI_PT); const ab=Math.max(0,g-NI_UEL); return atM*EE_MAIN + ab*EE_ADDL; }
 function erNI(gross,sac){ const g=Math.max(0,gross-sac); return Math.max(0,g-ER_ST)*ER_RATE; }
 function SL_pay(plan,gross,sac){ const {threshold,rate}=SL[plan]; return Math.max(0,(gross-sac)-threshold)*rate; }
 function per(n,key){ return key==='annual'? n : n/PERIODS[key]; }
@@ -332,8 +340,28 @@ function route(){
   pageYearend.classList.toggle('active',!isPay);
   tabPayslip.classList.toggle('active',isPay);
   tabYearend.classList.toggle('active',!isPay);
+  updatePrintHeader(isPay ? 'Payslip' : 'Year-end');
 }
 addEventListener('hashchange', route); route();
+
+// Print helpers
+function updatePrintHeader(label){
+  document.getElementById('printViewLabel').textContent = label;
+  const region = document.getElementById('region').value;
+  const perKey = document.getElementById('per').value;
+  const pa = document.getElementById('pa').value;
+  const taper = document.getElementById('taper').checked ? 'Yes' : 'No';
+  const sl = document.getElementById('sl').value.toUpperCase();
+  const pension = document.getElementById('pension').value || '0';
+  const mode = document.getElementById('j2Mode').value;
+  const j2Cap = (mode==='hourly') ? 'Job 2 capped at 20 hrs/week' : 'Job 2 annual salary mode';
+  document.getElementById('printSummary').textContent =
+    `Region: ${region} • Per: ${perKey} • PA: £${Number(pa||0).toLocaleString()} • Taper: ${taper} • SL: ${sl} • Pension (sac): ${pension}% • ${j2Cap}`;
+}
+function printCurrent(label){
+  updatePrintHeader(label);
+  window.print();
+}
 
 // ===== Core combined calculators =====
 function all_yearEnd(region, basePA, taper, pensionPct, slPlan, j1Gross, j2Gross){
@@ -514,34 +542,6 @@ function calc(){
     `<tr><td>${k}</td><td class="right">£${currency(v||0)}</td><td class="right">£${currency(per(v||0, perKey))}</td></tr>`
   ).join('');
   document.getElementById('ye_netPT').textContent='£'+currency(ye_netPer);
-
-  // Net per OT hour & marginal (YE)
-  if(j1OTRate>0){
-    const before=ye.net;
-    const after=all_yearEnd(region, basePA, taper, pensionPct, slPlan, j1Gross+j1OTRate, j2Gross).net;
-    const keep=after-before; const mr=Math.max(0,Math.min(1,1-(keep/j1OTRate)));
-    document.getElementById('ye_netPerOT').textContent='£'+currency(keep);
-    document.getElementById('ye_marginal').textContent=pct(mr);
-  } else {
-    document.getElementById('ye_netPerOT').textContent='—';
-    document.getElementById('ye_marginal').textContent='—';
-  }
-
-  // OT needed (YE)
-  let ye_otA='—', ye_otW='—';
-  if(targetAnnual>0){
-    if(ye.net>=targetAnnual){ ye_otA='0.00'; ye_otW='0.00'; }
-    else if(j1OTRate>0){
-      const req=solveGrossForTarget(wrapYE({region,basePA,taper,pensionPct,slPlan,j2Gross}), j1Gross, targetAnnual);
-      if(req!=null){
-        const extra=req - j1Gross;
-        ye_otA=(extra/j1OTRate).toLocaleString(undefined,{maximumFractionDigits:2});
-        ye_otW=(extra/j1OTRate/52).toLocaleString(undefined,{maximumFractionDigits:2});
-      }
-    }
-  }
-  document.getElementById('ye_otA').textContent=ye_otA;
-  document.getElementById('ye_otW').textContent=ye_otW;
 }
 
 // Auto-calc on load if hash present

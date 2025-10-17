@@ -1,607 +1,1234 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>UK Two-Job Take-Home Calculator (2025/26) — Payslip vs Year-end</title>
-<style>
-  :root { --gap:12px; --radius:12px; }
-  body { margin:0; font:16px/1.45 system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif; background:#0b0d12; color:#e9eef7; }
-  .wrap { max-width:1100px; margin:0 auto; padding:24px; }
-  h1 { margin:0 0 8px; font-size:1.6rem; }
-  h2 { margin:0 0 8px; font-size:1.2rem; }
-  .muted { color:#aab4cc; }
-  .card { background:#131826; border:1px solid #293047; border-radius:var(--radius); padding:16px; margin-top:var(--gap); }
-  .grid { display:grid; gap:var(--gap); grid-template-columns:1fr; }
-  @media (min-width:980px){ .grid-2 { grid-template-columns:1fr 1fr; } .grid-3 { grid-template-columns:repeat(3,1fr);} }
-  label { display:block; font-weight:600; margin-bottom:6px; }
-  input, select { width:100%; padding:10px 12px; border-radius:10px; border:1px solid #3a425e; background:#0f1320; color:#e9eef7; }
-  .row { display:flex; flex-wrap:wrap; gap:10px; align-items:center; }
-  .btn { cursor:pointer; background:#3b82f6; border:0; color:#fff; padding:10px 14px; border-radius:10px; font-weight:700; }
-  .btn.ghost { background:transparent; border:1px solid #3a425e; }
-  .btn:active { transform:translateY(1px); }
-  .tabs { display:flex; gap:8px; margin-top:12px; }
-  .tab { padding:8px 12px; border-radius:999px; border:1px solid #3a425e; color:#c9d6ff; cursor:pointer; user-select:none; }
-  .tab.active { background:#3b82f6; border-color:#3b82f6; color:white; }
-  .tag { display:inline-block; border:1px solid #3a425e; border-radius:999px; padding:2px 8px; font-size:12px; color:#c9d6ff;}
-  table { width:100%; border-collapse:collapse; margin-top:8px; }
-  th, td { border-bottom:1px solid #2a324a; padding:10px 8px; text-align:left; }
-  .right { text-align:right; }
-  .kpi { display:grid; gap:10px; grid-template-columns:1fr 1fr; }
-  @media (min-width:760px){ .kpi{ grid-template-columns:repeat(4,1fr); } }
-  .pill { background:#0f1320; border:1px solid #3a425e; border-radius:10px; padding:10px; }
-  .pill b { display:block; font-size:1.05rem; }
-  .hr { height:1px; background:#2a324a; margin:12px 0; }
-  .tiny { font-size:12px; color:#93a0bc; }
-  .warn { color:#ffd27d; }
-  .page { display:none; }
-  .page.active { display:block; }
-  .no-print { display:inherit; }
-  .print-only { display:none; }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UK Two-Job Take-Home Calculator | 2025/26 Tax Year</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
 
-  /* ---------- Print (compact A4) ---------- */
-  @media print {
-    @page { size: A4; margin: 12mm; }
-    body { background:white; color:#000; }
-    .wrap { max-width:none; padding:0; }
-    .no-print, .tabs, .tag, .btn, .ghost, .card .row:has(button), .card .row:has(a) { display:none !important; }
-    .card { background:white; border:none; padding:0; margin:0 0 10mm 0; }
-    .pill { border:1px solid #000; border-radius:6px; }
-    .hr { background:#000; opacity:0.2; margin:6mm 0 4mm; }
-    table { margin-top:4mm; }
-    th, td { border-bottom:1px solid #000; padding:4px 6px; font-size:12px; }
-    h1 { font-size:18px; margin:0 0 2mm; color:#000; }
-    h2 { font-size:14px; margin:0 0 2mm; color:#000; }
-    .muted, .tiny { color:#000; }
-    .page { display:none !important; }
-    .page.active { display:block !important; }
-    .print-only { display:block; }
-  }
-</style>
+        :root {
+            --primary: #15803d;
+            --primary-dark: #14532d;
+            --primary-light: #16a34a;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --dark: #0f172a;
+            --gray-900: #1e293b;
+            --gray-800: #334155;
+            --gray-700: #475569;
+            --gray-600: #64748b;
+            --gray-500: #94a3b8;
+            --gray-400: #cbd5e1;
+            --gray-300: #e2e8f0;
+            --gray-200: #f1f5f9;
+            --gray-100: #f8fafc;
+            --white: #ffffff;
+            --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+            --shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+            --shadow-lg: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+            --radius: 12px;
+            --radius-sm: 8px;
+            --radius-lg: 16px;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #15803d 0%, #166534 100%);
+            min-height: 100vh;
+            color: var(--dark);
+            line-height: 1.6;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .container {
+            max-width: 90%;
+            margin: 0 auto;
+            padding: 2rem;
+            flex: 1;
+        }
+
+        @media (min-width: 1600px) {
+            .container {
+                max-width: 1800px;
+            }
+        }
+
+        .header {
+            text-align: center;
+            color: var(--white);
+            margin-bottom: 2rem;
+            animation: fadeInDown 0.6s ease;
+        }
+
+        .header h1 {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.75rem;
+        }
+
+        .uk-flag {
+            width: 36px;
+            height: 22px;
+            display: inline-block;
+            position: relative;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 60 30'%3E%3Crect width='60' height='30' fill='%23012169'/%3E%3Cpath d='M0,0 L60,30 M60,0 L0,30' stroke='white' stroke-width='6'/%3E%3Cpath d='M0,0 L60,30 M60,0 L0,30' stroke='%23C8102E' stroke-width='4'/%3E%3Cpath d='M30,0 v30 M0,15 h60' stroke='white' stroke-width='10'/%3E%3Cpath d='M30,0 v30 M0,15 h60' stroke='%23C8102E' stroke-width='6'/%3E%3C/svg%3E");
+            background-size: cover;
+            background-position: center;
+            border-radius: 2px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .header p {
+            font-size: 0.95rem;
+            opacity: 0.95;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            background: rgba(255,255,255,0.2);
+            border-radius: 999px;
+            font-size: 0.875rem;
+            font-weight: 600;
+            margin-left: 0.5rem;
+            backdrop-filter: blur(10px);
+        }
+
+        .tabs {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 2rem;
+            background: rgba(255,255,255,0.1);
+            padding: 0.5rem;
+            border-radius: var(--radius);
+            backdrop-filter: blur(10px);
+            animation: fadeIn 0.8s ease;
+        }
+
+        .tab {
+            flex: 1;
+            padding: 0.75rem 1.5rem;
+            background: transparent;
+            border: none;
+            color: var(--white);
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            border-radius: var(--radius-sm);
+            transition: all 0.3s ease;
+        }
+
+        .tab:hover {
+            background: rgba(255,255,255,0.1);
+        }
+
+        .tab.active {
+            background: var(--white);
+            color: var(--primary);
+            box-shadow: var(--shadow);
+        }
+
+        .card {
+            background: var(--white);
+            border-radius: var(--radius-lg);
+            padding: 2rem;
+            margin-bottom: 1.5rem;
+            box-shadow: var(--shadow-lg);
+            animation: fadeInUp 0.6s ease;
+            transition: transform 0.3s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-2px);
+        }
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid var(--gray-200);
+        }
+
+        .card-header h2 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--dark);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .icon {
+            width: 24px;
+            height: 24px;
+            display: inline-block;
+        }
+
+        .grid {
+            display: grid;
+            gap: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .grid-2 {
+            grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+        }
+
+        .grid-3 {
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        }
+
+        .grid-4 {
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .form-group label {
+            font-weight: 600;
+            color: var(--gray-700);
+            margin-bottom: 0.5rem;
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .form-group input,
+        .form-group select {
+            padding: 0.75rem 1rem;
+            border: 2px solid var(--gray-300);
+            border-radius: var(--radius-sm);
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            background: var(--white);
+        }
+
+        .form-group input:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+        }
+
+        .form-group .hint {
+            font-size: 0.75rem;
+            color: var(--gray-600);
+            margin-top: 0.25rem;
+        }
+
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-top: 0.5rem;
+        }
+
+        .checkbox-group input[type="checkbox"] {
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+        }
+
+        .checkbox-group label {
+            margin: 0;
+            font-weight: 500;
+            cursor: pointer;
+        }
+
+        .btn {
+            padding: 0.875rem 2rem;
+            border: none;
+            border-radius: var(--radius-sm);
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: var(--white);
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-dark);
+            transform: translateY(-2px);
+            box-shadow: var(--shadow);
+        }
+
+        .btn-secondary {
+            background: var(--gray-200);
+            color: var(--gray-700);
+        }
+
+        .btn-secondary:hover {
+            background: var(--gray-300);
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 1.25rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, var(--gray-100), var(--white));
+            padding: 1.25rem;
+            border-radius: var(--radius);
+            border: 1px solid var(--gray-200);
+            transition: all 0.3s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow);
+        }
+
+        .stat-card .label {
+            font-size: 0.75rem;
+            color: var(--gray-600);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-card .value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--dark);
+        }
+
+        .stat-card.primary {
+            background: linear-gradient(135deg, #15803d, #166534);
+            color: var(--white);
+        }
+
+        .stat-card.primary .label {
+            color: rgba(255,255,255,0.9);
+        }
+
+        .stat-card.primary .value {
+            color: var(--white);
+        }
+
+        .table-wrapper {
+            overflow-x: auto;
+            margin: 1.5rem 0;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            padding: 1rem;
+            text-align: left;
+            border-bottom: 1px solid var(--gray-200);
+        }
+
+        th {
+            background: var(--gray-100);
+            font-weight: 600;
+            color: var(--gray-700);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        td {
+            color: var(--gray-900);
+        }
+
+        .text-right {
+            text-align: right;
+        }
+
+        .text-bold {
+            font-weight: 700;
+        }
+
+        .divider {
+            height: 2px;
+            background: var(--gray-200);
+            margin: 2rem 0;
+        }
+
+        .alert {
+            padding: 1rem 1.25rem;
+            border-radius: var(--radius);
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .alert-info {
+            background: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .alert-warning {
+            background: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .page {
+            display: none;
+        }
+
+        .page.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes fadeInDown {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .footer {
+            background: rgba(0, 0, 0, 0.2);
+            backdrop-filter: blur(10px);
+            padding: 2rem;
+            margin-top: 3rem;
+            text-align: center;
+            color: var(--white);
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .footer-content {
+            max-width: 90%;
+            margin: 0 auto;
+        }
+
+        @media (min-width: 1600px) {
+            .footer-content {
+                max-width: 1800px;
+            }
+        }
+
+        .developer-credit {
+            font-size: 0.95rem;
+            margin-bottom: 0.5rem;
+            opacity: 0.95;
+        }
+
+        .developer-credit a {
+            color: var(--white);
+            text-decoration: none;
+            font-weight: 600;
+            padding: 0.25rem 0.5rem;
+            border-radius: var(--radius-sm);
+            transition: all 0.3s ease;
+            display: inline-block;
+        }
+
+        .developer-credit a:hover {
+            background: rgba(255, 255, 255, 0.1);
+            transform: translateY(-2px);
+        }
+
+        .footer-year {
+            font-size: 0.85rem;
+            opacity: 0.7;
+            margin-top: 0.5rem;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                max-width: 100%;
+                padding: 1rem;
+            }
+            
+            .header h1 {
+                font-size: 1.1rem;
+            }
+            
+            .uk-flag {
+                width: 28px;
+                height: 18px;
+            }
+            
+            .card {
+                padding: 1.25rem;
+            }
+            
+            .grid-2, .grid-3, .grid-4 {
+                grid-template-columns: 1fr;
+            }
+            
+            .stats-grid {
+                grid-template-columns: 1fr 1fr;
+                gap: 0.75rem;
+            }
+            
+            .stat-card {
+                padding: 1rem;
+            }
+            
+            .stat-card .value {
+                font-size: 1.25rem;
+            }
+            
+            th, td {
+                padding: 0.5rem;
+                font-size: 0.8rem;
+            }
+
+            .footer {
+                padding: 1.5rem 1rem;
+            }
+            
+            .form-group input,
+            .form-group select {
+                padding: 0.625rem 0.875rem;
+                font-size: 0.95rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .header h1 {
+                font-size: 1rem;
+                gap: 0.5rem;
+            }
+            
+            .badge {
+                font-size: 0.75rem;
+                padding: 0.2rem 0.5rem;
+            }
+            
+            .tabs {
+                flex-direction: column;
+            }
+            
+            .tab {
+                width: 100%;
+                text-align: center;
+            }
+        }
+
+        @media print {
+            body {
+                background: white;
+            }
+            
+            .no-print {
+                display: none !important;
+            }
+            
+            .card {
+                box-shadow: none;
+                page-break-inside: avoid;
+            }
+        }
+    </style>
 </head>
 <body>
-<div class="wrap">
-  <h1>UK Two-Job Take-Home Calculator <span class="tag no-print">2025/26</span></h1>
-  <div class="muted no-print">Scotland supported • Two jobs • Student loan • Employer NI • Overtime solver • <strong>Payslip (Job 2 on BR)</strong> vs <strong>Year-end (combined)</strong>. Per-period view shows <em>Monthly</em> or <em>Weekly</em>.</div>
-
-  <!-- Quick nav -->
-  <div class="tabs no-print">
-    <a class="tab" id="tabPayslip" href="#payslip">Payslip view</a>
-    <a class="tab" id="tabYearend" href="#yearend">Year-end view</a>
-  </div>
-
-  <!-- Global settings -->
-  <div class="card no-print">
-    <h2>Global settings</h2>
-    <div class="grid grid-3">
-      <div>
-        <label for="region">Tax region</label>
-        <select id="region">
-          <option value="rUK">England/Wales/Northern Ireland (rUK)</option>
-          <option value="Scotland">Scotland</option>
-        </select>
-      </div>
-      <div>
-        <label for="pa">Personal Allowance (£)</label>
-        <input id="pa" type="number" inputmode="decimal" value="12570" />
-        <div class="row tiny" style="margin-top:6px;">
-          <input id="taper" type="checkbox" checked />
-          <label for="taper" style="margin:0;">Apply taper above £100,000 (–£1 per £2)</label>
+    <div class="container">
+        <div class="header">
+            <h1><span class="uk-flag"></span> Take-Home Calculator</h1>
+            <p>Accurate tax calculations for multiple employments <span class="badge">2025/26 Tax Year</span></p>
         </div>
-      </div>
-      <div>
-        <label for="pension">Employee pension (salary sacrifice) %</label>
-        <input id="pension" type="number" step="0.1" placeholder="e.g. 5" />
-        <div class="tiny">Applied to both jobs incl. overtime (ask to add a toggle if not).</div>
-      </div>
-      <div>
-        <label for="sl">Student loan plan</label>
-        <select id="sl">
-          <option value="none">None</option>
-          <option value="plan1">Plan 1 (£26,065)</option>
-          <option value="plan2">Plan 2 (£28,470)</option>
-          <option value="plan4">Plan 4 (£32,745)</option>
-          <option value="pgl">Postgrad (6% over £21,000)</option>
-          <option value="plan5">Plan 5 (£25,000) — mainly 2026/27</option>
-        </select>
-      </div>
-      <div>
-        <label for="per">Show amounts per</label>
-        <select id="per">
-          <option value="monthly">Monthly</option>
-          <option value="weekly">Weekly</option>
-          <option value="annual">Annual</option>
-        </select>
-        <div class="tiny">Tables show both Annual and your selected period.</div>
-      </div>
+
+        <div class="tabs no-print">
+            <button class="tab active" onclick="switchTab('payslip')">
+                💼 Payslip View
+            </button>
+            <button class="tab" onclick="switchTab('yearend')">
+                📊 Year-end View
+            </button>
+        </div>
+
+        <!-- Global Settings -->
+        <div class="card no-print">
+            <div class="card-header">
+                <h2>⚙️ Global Settings</h2>
+            </div>
+            <div class="grid grid-3">
+                <div class="form-group">
+                    <label>Tax Region</label>
+                    <select id="region">
+                        <option value="rUK">England/Wales/NI</option>
+                        <option value="Scotland">Scotland</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Personal Allowance (£)</label>
+                    <input type="number" id="pa" value="12570" />
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="taper" checked />
+                        <label for="taper">Apply taper above £100k</label>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Pension Contribution (%)</label>
+                    <input type="number" id="pension" step="0.1" placeholder="0" />
+                    <span class="hint">Salary sacrifice applied to both jobs</span>
+                </div>
+                <div class="form-group">
+                    <label>Student Loan Plan</label>
+                    <select id="sl">
+                        <option value="none">None</option>
+                        <option value="plan1">Plan 1 (£26,065)</option>
+                        <option value="plan2">Plan 2 (£28,470)</option>
+                        <option value="plan4">Plan 4 (£32,745)</option>
+                        <option value="pgl">Postgrad (£21,000)</option>
+                        <option value="plan5">Plan 5 (£25,000)</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Display Period</label>
+                    <select id="per">
+                        <option value="monthly">Monthly</option>
+                        <option value="weekly">Weekly</option>
+                        <option value="annual">Annual</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <!-- Job 1 -->
+        <div class="card no-print">
+            <div class="card-header">
+                <h2>👔 Job 1 - Main Employment</h2>
+            </div>
+            <div class="grid grid-3">
+                <div class="form-group">
+                    <label>Annual Salary (£)</label>
+                    <input type="number" id="j1Gross" placeholder="30000" />
+                    <span class="hint">Leave blank to calculate from hourly</span>
+                </div>
+                <div class="form-group">
+                    <label>Hourly Rate (£)</label>
+                    <input type="number" id="j1Hourly" step="0.01" placeholder="16.00" />
+                </div>
+                <div class="form-group">
+                    <label>Hours per Week</label>
+                    <input type="number" id="j1Hours" step="0.5" placeholder="37.5" />
+                </div>
+                <div class="form-group">
+                    <label>Overtime Multiplier</label>
+                    <input type="number" id="j1OTMult" step="0.25" value="1.5" />
+                    <span class="hint">1.5 = time and a half</span>
+                </div>
+                <div class="form-group">
+                    <label>Overtime Rate Override (£)</label>
+                    <input type="number" id="j1OTRateOverride" step="0.01" placeholder="Optional" />
+                    <span class="hint">Overrides calculated OT rate</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Job 2 -->
+        <div class="card no-print">
+            <div class="card-header">
+                <h2>💻 Job 2 - Secondary Employment</h2>
+            </div>
+            <div class="grid grid-3">
+                <div class="form-group">
+                    <label>Input Mode</label>
+                    <select id="j2Mode" onchange="syncJ2Mode()">
+                        <option value="hourly">Hourly (max 20hrs/week)</option>
+                        <option value="annual">Annual Salary</option>
+                    </select>
+                </div>
+                <div class="form-group" data-j2mode="hourly">
+                    <label>Hourly Rate (£)</label>
+                    <input type="number" id="j2Hourly" step="0.01" placeholder="15.00" />
+                </div>
+                <div class="form-group" data-j2mode="hourly">
+                    <label>Hours per Week</label>
+                    <input type="number" id="j2Hours" step="0.5" max="20" placeholder="18" />
+                    <span class="hint">Maximum 20 hours (visa restriction)</span>
+                </div>
+                <div class="form-group" data-j2mode="annual" style="display:none;">
+                    <label>Annual Salary (£)</label>
+                    <input type="number" id="j2Gross" placeholder="15600" />
+                </div>
+            </div>
+            <div class="alert alert-info">
+                <span>ℹ️</span>
+                <span>Job 2 is taxed at Basic Rate (20%) in payslip view, but combined in year-end calculations</span>
+            </div>
+        </div>
+
+        <!-- Target & Calculate -->
+        <div class="card no-print">
+            <div class="card-header">
+                <h2>🎯 Target & Overtime Calculator</h2>
+            </div>
+            <div class="grid grid-3">
+                <div class="form-group">
+                    <label>Target Take-Home (£)</label>
+                    <input type="number" id="targetNet" placeholder="2600" />
+                </div>
+                <div class="form-group">
+                    <label>Target Period</label>
+                    <select id="targetPer">
+                        <option value="monthly">Monthly</option>
+                        <option value="weekly">Weekly</option>
+                        <option value="annual">Annual</option>
+                    </select>
+                </div>
+                <div class="form-group" style="justify-content: flex-end;">
+                    <button class="btn btn-primary" onclick="calculate()">
+                        Calculate
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Results Pages -->
+        <div id="pagePayslip" class="page active">
+            <div class="card">
+                <div class="card-header">
+                    <h2>💼 Payslip View Results</h2>
+                    <button class="btn btn-secondary no-print" onclick="window.print()">
+                        🖨️ Print
+                    </button>
+                </div>
+                
+                <div class="stats-grid">
+                    <div class="stat-card primary">
+                        <div class="label">Net Pay (Annual)</div>
+                        <div class="value" id="br_netA">£0.00</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="label">Net Pay (Period)</div>
+                        <div class="value" id="br_netP">£0.00</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="label">Employer NI</div>
+                        <div class="value" id="br_erNI">£0.00</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="label">Total Cost</div>
+                        <div class="value" id="br_erCost">£0.00</div>
+                    </div>
+                </div>
+
+                <div class="table-wrapper">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Description</th>
+                                <th class="text-right">Annual</th>
+                                <th class="text-right">Per Period</th>
+                            </tr>
+                        </thead>
+                        <tbody id="br_tbody"></tbody>
+                    </table>
+                </div>
+
+                <div class="divider"></div>
+
+                <h3 style="margin-bottom: 1rem;">📈 Overtime Analysis</h3>
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="label">Net per OT Hour</div>
+                        <div class="value" id="br_otRate">£0.00</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="label">Marginal Rate</div>
+                        <div class="value" id="br_marginal">0%</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="label">OT Hours (Annual)</div>
+                        <div class="value" id="br_otA">0</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="label">OT Hours (Weekly)</div>
+                        <div class="value" id="br_otW">0</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="pageYearend" class="page">
+            <div class="card">
+                <div class="card-header">
+                    <h2>📊 Year-end View Results</h2>
+                    <button class="btn btn-secondary no-print" onclick="window.print()">
+                        🖨️ Print
+                    </button>
+                </div>
+                
+                <div class="stats-grid">
+                    <div class="stat-card primary">
+                        <div class="label">Net Pay (Annual)</div>
+                        <div class="value" id="ye_netA">£0.00</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="label">Net Pay (Period)</div>
+                        <div class="value" id="ye_netP">£0.00</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="label">Employer NI</div>
+                        <div class="value" id="ye_erNI">£0.00</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="label">Total Cost</div>
+                        <div class="value" id="ye_erCost">£0.00</div>
+                    </div>
+                </div>
+
+                <div class="table-wrapper">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Description</th>
+                                <th class="text-right">Annual</th>
+                                <th class="text-right">Per Period</th>
+                            </tr>
+                        </thead>
+                        <tbody id="ye_tbody"></tbody>
+                    </table>
+                </div>
+
+                <div class="divider"></div>
+
+                <h3 style="margin-bottom: 1rem;">📈 Overtime Analysis</h3>
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="label">Net per OT Hour</div>
+                        <div class="value" id="ye_otRate">£0.00</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="label">Marginal Rate</div>
+                        <div class="value" id="ye_marginal">0%</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="label">OT Hours (Annual)</div>
+                        <div class="value" id="ye_otA">0</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="label">OT Hours (Weekly)</div>
+                        <div class="value" id="ye_otW">0</div>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
-  </div>
 
-  <!-- Job 1 -->
-  <div class="card no-print">
-    <h2>Job 1 — Main employer (with your tax code)</h2>
-    <div class="grid grid-3">
-      <div>
-        <label for="j1Gross">Annual gross salary (£)</label>
-        <input id="j1Gross" type="number" inputmode="decimal" placeholder="e.g. 30000" />
-        <div class="tiny">If blank, we’ll infer from hourly × hours/week.</div>
-      </div>
-      <div>
-        <label for="j1Hourly">Base hourly rate (£/hr)</label>
-        <input id="j1Hourly" type="number" inputmode="decimal" placeholder="e.g. 16" />
-      </div>
-      <div>
-        <label for="j1Hours">Contracted hours per week</label>
-        <input id="j1Hours" type="number" inputmode="decimal" placeholder="e.g. 37.5" />
-      </div>
-      <div>
-        <label for="j1OTMult">Overtime multiplier</label>
-        <input id="j1OTMult" type="number" inputmode="decimal" step="0.1" value="1.5" />
-        <div class="tiny">1.0=normal, 1.5=time-and-a-half, 2.0=double time.</div>
-      </div>
-      <!-- NEW: Overtime hourly override -->
-      <div>
-        <label for="j1OTRateOverride">Overtime hourly rate (optional)</label>
-        <input id="j1OTRateOverride" type="number" inputmode="decimal" placeholder="e.g. 22.50" />
-        <div class="tiny">Overrides base-hourly × multiplier. Use if you don’t enter hours/week or have a fixed OT rate.</div>
-      </div>
-    </div>
-  </div>
+    <footer class="footer">
+        <div class="footer-content">
+            <div class="developer-credit">
+                Developed by <a href="https://linktr.ee/Prolite" target="_blank" rel="noopener noreferrer">Bensly</a>
+            </div>
+            <div class="footer-year">© 2025 | Built with precision for UK tax calculations</div>
+        </div>
+    </footer>
 
-  <!-- Job 2 -->
-  <div class="card no-print">
-    <h2>Job 2 — Second/part-time job (visa cap ≤ 20 hrs/week)</h2>
-    <div class="grid grid-3">
-      <div>
-        <label for="j2Mode">Input mode</label>
-        <select id="j2Mode">
-          <option value="hourly">Hourly × hours/week (cap at 20)</option>
-          <option value="annual">Annual salary</option>
-        </select>
-      </div>
-      <div data-mode="hourly">
-        <label for="j2Hourly">Job 2 hourly rate (£/hr)</label>
-        <input id="j2Hourly" type="number" inputmode="decimal" placeholder="e.g. 15" />
-      </div>
-      <div data-mode="hourly">
-        <label for="j2Hours">Job 2 hours per week (≤20)</label>
-        <input id="j2Hours" type="number" inputmode="decimal" placeholder="e.g. 18" />
-      </div>
-      <div data-mode="annual" style="display:none;">
-        <label for="j2Gross">Job 2 annual salary (£)</label>
-        <input id="j2Gross" type="number" inputmode="decimal" placeholder="e.g. 15600" />
-      </div>
-      <div class="row tiny" style="grid-column:1/-1;">
-        <span class="warn">Payslip view:</span> Job 2 taxed on BR 20% (no PA). NI always per job. <span class="warn">Year-end view:</span> pooled for true combined bands.
-      </div>
-    </div>
-  </div>
+    <script>
+        // Tax calculation engine
+        const PERIODS = { annual: 1, monthly: 12, weekly: 52 };
+        
+        const TAX_BANDS = {
+            rUK: [
+                { upTo: 50270, rate: 0.20 },
+                { upTo: 125140, rate: 0.40 },
+                { upTo: Infinity, rate: 0.45 }
+            ],
+            Scotland: [
+                { upTo: 15397, rate: 0.19 },
+                { upTo: 27491, rate: 0.20 },
+                { upTo: 43662, rate: 0.21 },
+                { upTo: 75000, rate: 0.42 },
+                { upTo: 125140, rate: 0.45 },
+                { upTo: Infinity, rate: 0.48 }
+            ]
+        };
 
-  <!-- Target -->
-  <div class="card no-print">
-    <h2>Target take-home & Overtime (from Job 1)</h2>
-    <div class="grid grid-3">
-      <div>
-        <label for="targetNet">Target net pay</label>
-        <input id="targetNet" type="number" inputmode="decimal" placeholder="e.g. 2600" />
-      </div>
-      <div>
-        <label for="targetPer">Target is per</label>
-        <select id="targetPer">
-          <option value="monthly">Monthly</option>
-          <option value="weekly">Weekly</option>
-          <option value="annual">Annual</option>
-        </select>
-      </div>
-      <div class="row" style="align-items:end;">
-        <button class="btn" onclick="calc()">Calculate</button>
-        <a class="btn ghost" href="#yearend">Go to Year-end tab</a>
-      </div>
-    </div>
-  </div>
+        const NI_THRESHOLDS = {
+            PT: 12570,
+            UEL: 50270,
+            EE_MAIN: 0.08,
+            EE_ADDL: 0.02,
+            ER_ST: 9100,
+            ER_RATE: 0.138
+        };
 
-  <!-- Print header (compact) -->
-  <div class="print-only" id="printHeader" style="margin-bottom:6mm;">
-    <h1>Two-Job Take-Home — <span id="printViewLabel">Payslip</span></h1>
-    <div style="font-size:12px;">
-      <div id="printSummary"></div>
-    </div>
-  </div>
+        const STUDENT_LOANS = {
+            none: { threshold: Infinity, rate: 0 },
+            plan1: { threshold: 26065, rate: 0.09 },
+            plan2: { threshold: 28470, rate: 0.09 },
+            plan4: { threshold: 32745, rate: 0.09 },
+            plan5: { threshold: 25000, rate: 0.09 },
+            pgl: { threshold: 21000, rate: 0.06 }
+        };
 
-  <!-- Payslip page -->
-  <div id="pagePayslip" class="page">
-    <div class="card">
-      <div class="row no-print" style="justify-content:space-between; align-items:center;">
-        <h2>Payslip view (Job 2 on BR 20%)</h2>
-        <button class="btn" onclick="printCurrent('Payslip')">Print this page</button>
-      </div>
-      <div class="kpi">
-        <div class="pill"><span class="tiny">Combined net (annual)</span><b id="br_netA">—</b></div>
-        <div class="pill"><span class="tiny">Combined net (per selected)</span><b id="br_netP">—</b></div>
-        <div class="pill"><span class="tiny">Employer NI (annual, both jobs)</span><b id="br_erNIA">—</b></div>
-        <div class="pill"><span class="tiny">Total employer cost (annual)</span><b id="br_erCostA">—</b></div>
-      </div>
+        function formatCurrency(n) {
+            return '£' + n.toLocaleString('en-GB', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        }
 
-      <div class="hr"></div>
+        function formatPercent(n) {
+            return (n * 100).toFixed(1) + '%';
+        }
 
-      <table>
-        <thead>
-          <tr><th>Item</th><th class="right">Annual (£)</th><th class="right">Per (selected)</th></tr>
-        </thead>
-        <tbody id="br_rows"></tbody>
-        <tfoot>
-          <tr><td class="right" colspan="2"><strong>Combined net</strong></td><td class="right"><strong id="br_netPT">—</strong></td></tr>
-        </tfoot>
-      </table>
+        function switchTab(tab) {
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+            
+            if (tab === 'payslip') {
+                document.querySelectorAll('.tab')[0].classList.add('active');
+                document.getElementById('pagePayslip').classList.add('active');
+            } else {
+                document.querySelectorAll('.tab')[1].classList.add('active');
+                document.getElementById('pageYearend').classList.add('active');
+            }
+        }
 
-      <div class="hr"></div>
-      <h3>Overtime from Job 1 to hit target (Payslip view)</h3>
-      <div class="kpi">
-        <div class="pill"><span class="tiny">Net per OT hour (Job 1)</span><b id="br_netPerOT">—</b></div>
-        <div class="pill"><span class="tiny">Marginal deduction rate</span><b id="br_marginal">—</b></div>
-        <div class="pill"><span class="tiny">OT hours needed (annual)</span><b id="br_otA">—</b></div>
-        <div class="pill"><span class="tiny">OT hours needed (per week)</span><b id="br_otW">—</b></div>
-      </div>
+        function syncJ2Mode() {
+            const mode = document.getElementById('j2Mode').value;
+            document.querySelectorAll('[data-j2mode="hourly"]').forEach(el => {
+                el.style.display = mode === 'hourly' ? 'block' : 'none';
+            });
+            document.querySelectorAll('[data-j2mode="annual"]').forEach(el => {
+                el.style.display = mode === 'annual' ? 'block' : 'none';
+            });
+        }
 
-      <div class="tiny" id="br_notes" style="margin-top:8px;"></div>
-    </div>
-  </div>
+        function calculateTaperedPA(basePA, applyTaper, income) {
+            if (!applyTaper || income <= 100000) return basePA;
+            const reduction = Math.floor((income - 100000) / 2);
+            return Math.max(0, basePA - reduction);
+        }
 
-  <!-- Year-end page -->
-  <div id="pageYearend" class="page">
-    <div class="card">
-      <div class="row no-print" style="justify-content:space-between; align-items:center;">
-        <h2>Year-end view (true combined tax bands)</h2>
-        <button class="btn" onclick="printCurrent('Year-end')">Print this page</button>
-      </div>
-      <div class="kpi">
-        <div class="pill"><span class="tiny">Combined net (annual)</span><b id="ye_netA">—</b></div>
-        <div class="pill"><span class="tiny">Combined net (per selected)</span><b id="ye_netP">—</b></div>
-        <div class="pill"><span class="tiny">Employer NI (annual, both jobs)</span><b id="ye_erNIA">—</b></div>
-        <div class="pill"><span class="tiny">Total employer cost (annual)</span><b id="ye_erCostA">—</b></div>
-      </div>
+        function calculateIncomeTax(region, taxableIncome) {
+            const bands = TAX_BANDS[region];
+            let tax = 0;
+            let previousLimit = 0;
 
-      <div class="hr"></div>
+            for (const band of bands) {
+                const taxableInBand = Math.max(0, Math.min(taxableIncome - previousLimit, band.upTo - previousLimit));
+                tax += taxableInBand * band.rate;
+                previousLimit = band.upTo;
+                if (taxableIncome <= band.upTo) break;
+            }
 
-      <table>
-        <thead>
-          <tr><th>Item</th><th class="right">Annual (£)</th><th class="right">Per (selected)</th></tr>
-        </thead>
-        <tbody id="ye_rows"></tbody>
-        <tfoot>
-          <tr><td class="right" colspan="2"><strong>Combined net</strong></td><td class="right"><strong id="ye_netPT">—</strong></td></tr>
-        </tfoot>
-      </table>
+            return tax;
+        }
 
-      <div class="hr"></div>
-      <h3>Overtime from Job 1 to hit target (Year-end view)</h3>
-      <div class="kpi">
-        <div class="pill"><span class="tiny">Net per OT hour (Job 1)</span><b id="ye_netPerOT">—</b></div>
-        <div class="pill"><span class="tiny">Marginal deduction rate</span><b id="ye_marginal">—</b></div>
-        <div class="pill"><span class="tiny">OT hours needed (annual)</span><b id="ye_otA">—</b></div>
-        <div class="pill"><span class="tiny">OT hours needed (per week)</span><b id="ye_otW">—</b></div>
-      </div>
+        function calculateNI(gross, isEmployer = false) {
+            if (isEmployer) {
+                return Math.max(0, gross - NI_THRESHOLDS.ER_ST) * NI_THRESHOLDS.ER_RATE;
+            }
+            
+            if (gross <= NI_THRESHOLDS.PT) return 0;
+            
+            const mainRate = Math.min(Math.max(0, gross - NI_THRESHOLDS.PT), NI_THRESHOLDS.UEL - NI_THRESHOLDS.PT);
+            const additionalRate = Math.max(0, gross - NI_THRESHOLDS.UEL);
+            
+            return mainRate * NI_THRESHOLDS.EE_MAIN + additionalRate * NI_THRESHOLDS.EE_ADDL;
+        }
 
-      <div class="tiny" id="ye_notes" style="margin-top:8px;"></div>
-    </div>
-  </div>
-</div>
+        function calculateStudentLoan(plan, gross) {
+            const { threshold, rate } = STUDENT_LOANS[plan];
+            return Math.max(0, gross - threshold) * rate;
+        }
 
-<script>
-const currency = n => n.toLocaleString(undefined,{maximumFractionDigits:2, minimumFractionDigits:2});
-const pct = x => (x*100).toLocaleString(undefined,{maximumFractionDigits:1}) + '%';
-const PERIODS = { annual:1, monthly:12, weekly:52 };
+        function calculate() {
+            // Get inputs
+            const region = document.getElementById('region').value;
+            const basePA = parseFloat(document.getElementById('pa').value) || 12570;
+            const applyTaper = document.getElementById('taper').checked;
+            const pensionPct = (parseFloat(document.getElementById('pension').value) || 0) / 100;
+            const slPlan = document.getElementById('sl').value;
+            const displayPeriod = document.getElementById('per').value;
 
-// --- 2025/26 core parameters ---
-const RUK_BANDS = [
-  { upTo: 50270,  rate: 0.20 }, { upTo: 125140, rate: 0.40 }, { upTo: Infinity, rate: 0.45 },
-];
-const SCO_BANDS = [
-  { upTo: 15397,  rate: 0.19 }, { upTo: 27491,  rate: 0.20 },
-  { upTo: 43662,  rate: 0.21 }, { upTo: 75000,  rate: 0.42 },
-  { upTo: 125140, rate: 0.45 }, { upTo: Infinity, rate: 0.48 },
-];
-const NI_PT=12570, NI_UEL=50270, EE_MAIN=0.08, EE_ADDL=0.02;
-const ER_ST=9100, ER_RATE=0.138;
-const SL = {
-  none:{threshold:Infinity,rate:0},
-  plan1:{threshold:26065,rate:0.09}, plan2:{threshold:28470,rate:0.09},
-  plan4:{threshold:32745,rate:0.09}, plan5:{threshold:25000,rate:0.09},
-  pgl:{threshold:21000,rate:0.06}
-};
+            // Job 1 inputs
+            let j1Gross = parseFloat(document.getElementById('j1Gross').value) || 0;
+            const j1Hourly = parseFloat(document.getElementById('j1Hourly').value) || 0;
+            const j1Hours = parseFloat(document.getElementById('j1Hours').value) || 0;
+            const j1OTMult = parseFloat(document.getElementById('j1OTMult').value) || 1.5;
+            const j1OTRateOverride = parseFloat(document.getElementById('j1OTRateOverride').value) || 0;
 
-function taperedPA(basePA, applyTaper, ANI){ if(!applyTaper) return basePA; if(ANI<=100000) return basePA; const r=Math.floor((ANI-100000)/2); return Math.max(0, basePA-r); }
-function bands(region){ return region==='rUK'? RUK_BANDS : SCO_BANDS; }
-function IT_from_taxable(region, taxable){
-  let tax=0, prev=0;
-  for(const b of bands(region)){
-    const amt=Math.max(0, Math.min(taxable, b.upTo-prev));
-    tax += amt*b.rate; prev=b.upTo;
-    if(taxable<=b.upTo) break;
-  } return tax;
-}
-function eeNI(gross, sac){ const g=Math.max(0,gross-sac); if(g<=NI_PT) return 0; const atM=Math.max(0,Math.min(g,NI_UEL)-NI_PT); const ab=Math.max(0,g-NI_UEL); return atM*EE_MAIN + ab*EE_ADDL; }
-function erNI(gross,sac){ const g=Math.max(0,gross-sac); return Math.max(0,g-ER_ST)*ER_RATE; }
-function SL_pay(plan,gross,sac){ const {threshold,rate}=SL[plan]; return Math.max(0,(gross-sac)-threshold)*rate; }
-function per(n,key){ return key==='annual'? n : n/PERIODS[key]; }
+            // Calculate Job 1 gross if not provided
+            if (!j1Gross && j1Hourly && j1Hours) {
+                j1Gross = j1Hourly * j1Hours * 52;
+            }
 
-// UI: Job 2 mode switch
-const j2ModeEl = document.getElementById('j2Mode');
-function syncMode(){
-  const mode=j2ModeEl.value;
-  document.querySelectorAll('[data-mode="hourly"]').forEach(e=> e.style.display=(mode==='hourly'?'block':'none'));
-  document.querySelectorAll('[data-mode="annual"]').forEach(e=> e.style.display=(mode==='annual'?'block':'none'));
-}
-j2ModeEl.addEventListener('change', syncMode); syncMode();
+            // Calculate overtime rate
+            let j1BaseHourly = j1Hourly;
+            if (!j1BaseHourly && j1Gross && j1Hours) {
+                j1BaseHourly = j1Gross / (j1Hours * 52);
+            }
+            const j1OTRate = j1OTRateOverride || (j1BaseHourly * j1OTMult);
 
-// Routing: #payslip / #yearend
-const pagePayslip=document.getElementById('pagePayslip');
-const pageYearend=document.getElementById('pageYearend');
-const tabPayslip=document.getElementById('tabPayslip');
-const tabYearend=document.getElementById('tabYearend');
-function route(){
-  const h=(location.hash||'#payslip').toLowerCase();
-  const isPay=h.includes('payslip');
-  pagePayslip.classList.toggle('active',isPay);
-  pageYearend.classList.toggle('active',!isPay);
-  tabPayslip.classList.toggle('active',isPay);
-  tabYearend.classList.toggle('active',!isPay);
-  updatePrintHeader(isPay ? 'Payslip' : 'Year-end');
-}
-addEventListener('hashchange', route); route();
+            // Job 2 inputs
+            const j2Mode = document.getElementById('j2Mode').value;
+            let j2Gross = 0;
+            if (j2Mode === 'hourly') {
+                const j2Hourly = parseFloat(document.getElementById('j2Hourly').value) || 0;
+                let j2Hours = Math.min(20, parseFloat(document.getElementById('j2Hours').value) || 0);
+                j2Gross = j2Hourly * j2Hours * 52;
+            } else {
+                j2Gross = parseFloat(document.getElementById('j2Gross').value) || 0;
+            }
 
-// Print helpers
-function updatePrintHeader(label){
-  document.getElementById('printViewLabel').textContent = label;
-  const region = document.getElementById('region').value;
-  const perKey = document.getElementById('per').value;
-  const pa = document.getElementById('pa').value;
-  const taper = document.getElementById('taper').checked ? 'Yes' : 'No';
-  const sl = document.getElementById('sl').value.toUpperCase();
-  const pension = document.getElementById('pension').value || '0';
-  const mode = document.getElementById('j2Mode').value;
-  const j2Cap = (mode==='hourly') ? 'Job 2 capped at 20 hrs/week' : 'Job 2 annual salary mode';
-  document.getElementById('printSummary').textContent =
-    `Region: ${region} • Per: ${perKey} • PA: £${Number(pa||0).toLocaleString()} • Taper: ${taper} • SL: ${sl} • Pension (sac): ${pension}% • ${j2Cap}`;
-}
-function printCurrent(label){
-  updatePrintHeader(label);
-  window.print();
-}
+            // Target
+            const targetValue = parseFloat(document.getElementById('targetNet').value) || 0;
+            const targetPeriod = document.getElementById('targetPer').value;
+            const targetAnnual = targetPeriod === 'annual' ? targetValue : 
+                                targetPeriod === 'monthly' ? targetValue * 12 : 
+                                targetValue * 52;
 
-// ===== Core combined calculators =====
-function all_yearEnd(region, basePA, taper, pensionPct, slPlan, j1Gross, j2Gross){
-  const s1=Math.max(0,j1Gross), s2=Math.max(0,j2Gross), total=s1+s2;
-  const sac= total*pensionPct;
-  const ANI= total - sac;
-  const PA = taperedPA(basePA, taper, ANI);
-  const taxable=Math.max(0,total - sac - PA);
-  const IT= IT_from_taxable(region, taxable);
-  const sac1=s1*pensionPct, sac2=s2*pensionPct;
-  const ee1 = eeNI(s1,sac1), ee2=eeNI(s2,sac2), ee=ee1+ee2;
-  const sl = SL_pay(slPlan, total, sac);
-  const net = Math.max(0,total - (sac+IT+ee+sl));
-  const er1=erNI(s1,sac1), er2=erNI(s2,sac2), er=er1+er2;
-  const employerCost = total + er;
-  return { net, IT, eeNI:ee, sl, salSac:sac, PA, totalGross:total, erNI:er, employerCost,
-           parts:{j1:{gross:s1,eeNI:ee1,erNI:er1,salSac:sac1},
-                  j2:{gross:s2,eeNI:ee2,erNI:er2,salSac:sac2}} };
-}
-function all_payslipBR(region, basePA, taper, pensionPct, slPlan, j1Gross, j2Gross){
-  const s1=Math.max(0,j1Gross), s2=Math.max(0,j2Gross), total=s1+s2;
-  const sac1=s1*pensionPct, sac2=s2*pensionPct;
-  const ANI1 = s1 - sac1;
-  const PA1 = taperedPA(basePA, taper, ANI1);
-  const taxable1 = Math.max(0, s1 - sac1 - PA1);
-  const IT1 = IT_from_taxable(region, taxable1);
-  const taxable2 = Math.max(0, s2 - sac2); // no PA
-  const IT2 = taxable2 * 0.20; // BR 20%
-  const ee1=eeNI(s1,sac1), ee2=eeNI(s2,sac2);
-  const sl1=SL_pay(slPlan,s1,sac1), sl2=SL_pay(slPlan,s2,sac2);
-  const sac=sac1+sac2, IT=IT1+IT2, ee=ee1+ee2, sl=sl1+sl2;
-  const net = Math.max(0, total - (sac+IT+ee+sl));
-  const er1=erNI(s1,sac1), er2=erNI(s2,sac2), er=er1+er2;
-  const employerCost = total + er;
-  return { net, IT, eeNI:ee, sl, salSac:sac, PA:PA1, totalGross:total, erNI:er, employerCost,
-           parts:{ j1:{gross:s1,IT:IT1,eeNI:ee1,sl:sl1,erNI:er1,salSac:sac1,PA:PA1},
-                   j2:{gross:s2,IT:IT2,eeNI:ee2,sl:sl2,erNI:er2,salSac:sac2} } };
-}
+            // Calculate Payslip View (BR tax for Job 2)
+            const brResults = calculatePayslipView(region, basePA, applyTaper, pensionPct, slPlan, j1Gross, j2Gross);
+            displayPayslipResults(brResults, displayPeriod, j1OTRate, targetAnnual, j1Gross, j2Gross, region, basePA, applyTaper, pensionPct, slPlan);
 
-// Solvers with Job 2 fixed
-function wrapYE(p){ const {region, basePA, taper, pensionPct, slPlan, j2Gross}=p;
-  return g => all_yearEnd(region, basePA, taper, pensionPct, slPlan, g, j2Gross).net; }
-function wrapBR(p){ const {region, basePA, taper, pensionPct, slPlan, j2Gross}=p;
-  return g => all_payslipBR(region, basePA, taper, pensionPct, slPlan, g, j2Gross).net; }
-function solveGrossForTarget(fNet, startGross, targetNet){
-  const f=g=>fNet(g)-targetNet; let lo=0, hi=Math.max(startGross*2,100000), iter=0;
-  while(f(hi)<0 && hi<5_000_000 && iter<40){ hi*=2; iter++; }
-  if(f(hi)<0) return null;
-  for(let i=0;i<80;i++){ const mid=(lo+hi)/2, v=f(mid); if(Math.abs(v)<0.01) return mid; if(v<0) lo=mid; else hi=mid; }
-  return (lo+hi)/2;
-}
+            // Calculate Year-end View (combined tax)
+            const yeResults = calculateYearEndView(region, basePA, applyTaper, pensionPct, slPlan, j1Gross, j2Gross);
+            displayYearEndResults(yeResults, displayPeriod, j1OTRate, targetAnnual, j1Gross, j2Gross, region, basePA, applyTaper, pensionPct, slPlan);
+        }
 
-// Main calc
-function calc(){
-  // Globals
-  const region=document.getElementById('region').value;
-  const basePA=Math.max(0,parseFloat(document.getElementById('pa').value||'0'));
-  const taper=document.getElementById('taper').checked;
-  const pensionPct=Math.max(0,parseFloat(document.getElementById('pension').value||'0')/100);
-  const slPlan=document.getElementById('sl').value;
-  const perKey=document.getElementById('per').value;
+        function calculatePayslipView(region, basePA, applyTaper, pensionPct, slPlan, j1Gross, j2Gross) {
+            // Job 1 calculations
+            const j1Pension = j1Gross * pensionPct;
+            const j1NetPay = j1Gross - j1Pension;
+            const j1PA = calculateTaperedPA(basePA, applyTaper, j1NetPay);
+            const j1Taxable = Math.max(0, j1NetPay - j1PA);
+            const j1Tax = calculateIncomeTax(region, j1Taxable);
+            const j1NI = calculateNI(j1NetPay);
+            const j1SL = calculateStudentLoan(slPlan, j1NetPay);
+            const j1ErNI = calculateNI(j1NetPay, true);
 
-  // Job 1
-  let j1Gross=parseFloat(document.getElementById('j1Gross').value||'0');
-  const j1Hourly=parseFloat(document.getElementById('j1Hourly').value||'0');
-  const j1Hours=parseFloat(document.getElementById('j1Hours').value||'0');
-  const j1OTMult=parseFloat(document.getElementById('j1OTMult').value||'1');
-  if((!j1Gross||j1Gross===0) && j1Hourly>0 && j1Hours>0) j1Gross=j1Hourly*j1Hours*52;
+            // Job 2 calculations (Basic Rate)
+            const j2Pension = j2Gross * pensionPct;
+            const j2NetPay = j2Gross - j2Pension;
+            const j2Tax = j2NetPay * 0.20; // BR 20%
+            const j2NI = calculateNI(j2NetPay);
+            const j2SL = calculateStudentLoan(slPlan, j2NetPay);
+            const j2ErNI = calculateNI(j2NetPay, true);
 
-  // infer base hourly if possible
-  let j1BaseHr=j1Hourly;
-  if((!j1BaseHr||j1BaseHr===0) && j1Gross>0 && j1Hours>0) j1BaseHr=j1Gross/(j1Hours*52);
+            // Combined
+            const totalGross = j1Gross + j2Gross;
+            const totalPension = j1Pension + j2Pension;
+            const totalTax = j1Tax + j2Tax;
+            const totalNI = j1NI + j2NI;
+            const totalSL = j1SL + j2SL;
+            const totalErNI = j1ErNI + j2ErNI;
+            const netPay = totalGross - totalPension - totalTax - totalNI - totalSL;
 
-  // NEW: explicit overtime-rate override
-  const j1OTRateOverride = parseFloat(document.getElementById('j1OTRateOverride').value || '0');
-  const j1OTRate = (j1OTRateOverride && j1OTRateOverride > 0)
-    ? j1OTRateOverride
-    : (j1BaseHr > 0 ? j1BaseHr * j1OTMult : 0);
+            return {
+                j1: { gross: j1Gross, pension: j1Pension, tax: j1Tax, ni: j1NI, sl: j1SL, erNI: j1ErNI },
+                j2: { gross: j2Gross, pension: j2Pension, tax: j2Tax, ni: j2NI, sl: j2SL, erNI: j2ErNI },
+                total: { gross: totalGross, pension: totalPension, tax: totalTax, ni: totalNI, sl: totalSL, erNI: totalErNI, net: netPay },
+                employerCost: totalGross + totalErNI
+            };
+        }
 
-  // Job 2
-  const mode=document.getElementById('j2Mode').value;
-  let j2Gross=0;
-  if(mode==='hourly'){
-    const j2Hr=parseFloat(document.getElementById('j2Hourly').value||'0');
-    let j2H=parseFloat(document.getElementById('j2Hours').value||'0');
-    if(j2H>20) j2H=20;
-    j2Gross=(j2Hr>0&&j2H>0)? j2Hr*j2H*52 : 0;
-  } else {
-    j2Gross=parseFloat(document.getElementById('j2Gross').value||'0');
-  }
+        function calculateYearEndView(region, basePA, applyTaper, pensionPct, slPlan, j1Gross, j2Gross) {
+            const totalGross = j1Gross + j2Gross;
+            const totalPension = totalGross * pensionPct;
+            const netPay = totalGross - totalPension;
+            
+            // Combined tax calculation
+            const effectivePA = calculateTaperedPA(basePA, applyTaper, netPay);
+            const taxableIncome = Math.max(0, netPay - effectivePA);
+            const totalTax = calculateIncomeTax(region, taxableIncome);
+            
+            // NI calculated per job
+            const j1Pension = j1Gross * pensionPct;
+            const j2Pension = j2Gross * pensionPct;
+            const j1NI = calculateNI(j1Gross - j1Pension);
+            const j2NI = calculateNI(j2Gross - j2Pension);
+            const totalNI = j1NI + j2NI;
+            
+            // Student loan on combined income
+            const totalSL = calculateStudentLoan(slPlan, netPay);
+            
+            // Employer NI per job
+            const j1ErNI = calculateNI(j1Gross - j1Pension, true);
+            const j2ErNI = calculateNI(j2Gross - j2Pension, true);
+            const totalErNI = j1ErNI + j2ErNI;
+            
+            const net = totalGross - totalPension - totalTax - totalNI - totalSL;
 
-  // Target
-  const tgtVal=parseFloat(document.getElementById('targetNet').value||'0');
-  const tgtPer=document.getElementById('targetPer').value;
-  const targetAnnual = tgtPer==='annual'? tgtVal : tgtPer==='monthly'? tgtVal*12 : tgtVal*52;
+            return {
+                j1: { gross: j1Gross, pension: j1Pension, ni: j1NI, erNI: j1ErNI },
+                j2: { gross: j2Gross, pension: j2Pension, ni: j2NI, erNI: j2ErNI },
+                total: { gross: totalGross, pension: totalPension, tax: totalTax, ni: totalNI, sl: totalSL, erNI: totalErNI, net: net },
+                employerCost: totalGross + totalErNI,
+                effectivePA: effectivePA
+            };
+        }
 
-  // --- Payslip (BR) ---
-  const br = all_payslipBR(region, basePA, taper, pensionPct, slPlan, j1Gross, j2Gross);
-  const br_netPer = per(br.net, perKey);
-  document.getElementById('pagePayslip').classList.add('active'); // default show
-  document.getElementById('br_netA').textContent='£'+currency(br.net);
-  document.getElementById('br_netP').textContent='£'+currency(br_netPer);
-  document.getElementById('br_erNIA').textContent='£'+currency(br.erNI);
-  document.getElementById('br_erCostA').textContent='£'+currency(br.employerCost);
+        function displayPayslipResults(results, period, otRate, targetAnnual, j1Gross, j2Gross, region, basePA, applyTaper, pensionPct, slPlan) {
+            const periodDiv = PERIODS[period];
+            
+            // Update summary cards
+            document.getElementById('br_netA').textContent = formatCurrency(results.total.net);
+            document.getElementById('br_netP').textContent = formatCurrency(results.total.net / periodDiv);
+            document.getElementById('br_erNI').textContent = formatCurrency(results.total.erNI);
+            document.getElementById('br_erCost').textContent = formatCurrency(results.employerCost);
 
-  const brRows = [
-    ['Job 1 gross', br.parts.j1.gross],
-    ['Job 1 income tax', br.parts.j1.IT],
-    ['Job 1 employee NI', br.parts.j1.eeNI],
-    ['Job 1 student loan', br.parts.j1.sl],
-    ['Job 1 pension (sacrifice)', br.parts.j1.salSac],
-    ['Job 1 employer NI', br.parts.j1.erNI],
-    ['Job 2 gross', br.parts.j2.gross],
-    ['Job 2 income tax (BR 20%)', br.parts.j2.IT],
-    ['Job 2 employee NI', br.parts.j2.eeNI],
-    ['Job 2 student loan', br.parts.j2.sl],
-    ['Job 2 pension (sacrifice)', br.parts.j2.salSac],
-    ['Job 2 employer NI', br.parts.j2.erNI],
-    ['Total gross (both jobs)', br.totalGross],
-    ['Total employee NI', br.eeNI],
-    ['Total income tax', br.IT],
-    ['Total student loan', br.sl],
-    ['Total pension (sacrifice)', br.salSac]
-  ];
-  document.getElementById('br_rows').innerHTML = brRows.map(([k,v]) =>
-    `<tr><td>${k}</td><td class="right">£${currency(v||0)}</td><td class="right">£${currency(per(v||0, perKey))}</td></tr>`
-  ).join('');
-  document.getElementById('br_netPT').textContent='£'+currency(br_netPer);
+            // Build table rows
+            const rows = [
+                ['Job 1 Gross Salary', results.j1.gross],
+                ['Job 1 Income Tax', results.j1.tax],
+                ['Job 1 National Insurance', results.j1.ni],
+                ['Job 1 Student Loan', results.j1.sl],
+                ['Job 1 Pension (Sacrifice)', results.j1.pension],
+                ['', null],
+                ['Job 2 Gross Salary', results.j2.gross],
+                ['Job 2 Income Tax (BR 20%)', results.j2.tax],
+                ['Job 2 National Insurance', results.j2.ni],
+                ['Job 2 Student Loan', results.j2.sl],
+                ['Job 2 Pension (Sacrifice)', results.j2.pension],
+                ['', null],
+                ['<b>Total Deductions</b>', results.total.pension + results.total.tax + results.total.ni + results.total.sl],
+                ['<b>Net Take-Home</b>', results.total.net]
+            ];
 
-  // Net per OT hour & marginal (BR)
-  if(j1OTRate>0){
-    const before=br.net;
-    const after=all_payslipBR(region, basePA, taper, pensionPct, slPlan, j1Gross+j1OTRate, j2Gross).net;
-    const keep=after-before; const mr=Math.max(0,Math.min(1,1-(keep/j1OTRate)));
-    document.getElementById('br_netPerOT').textContent='£'+currency(keep);
-    document.getElementById('br_marginal').textContent=pct(mr);
-  } else {
-    document.getElementById('br_netPerOT').textContent='—';
-    document.getElementById('br_marginal').textContent='—';
-  }
+            const tbody = document.getElementById('br_tbody');
+            tbody.innerHTML = rows.map(([label, value]) => {
+                if (value === null) return '<tr><td colspan="3">&nbsp;</td></tr>';
+                return `
+                    <tr>
+                        <td>${label}</td>
+                        <td class="text-right">${formatCurrency(value)}</td>
+                        <td class="text-right">${formatCurrency(value / periodDiv)}</td>
+                    </tr>
+                `;
+            }).join('');
 
-  // OT needed (BR)
-  let br_otA='—', br_otW='—';
-  if(targetAnnual>0){
-    if(br.net>=targetAnnual){ br_otA='0.00'; br_otW='0.00'; }
-    else if(j1OTRate>0){
-      const req=solveGrossForTarget(wrapBR({region,basePA,taper,pensionPct,slPlan,j2Gross}), j1Gross, targetAnnual);
-      if(req!=null){
-        const extra=req - j1Gross;
-        br_otA=(extra/j1OTRate).toLocaleString(undefined,{maximumFractionDigits:2});
-        br_otW=(extra/j1OTRate/52).toLocaleString(undefined,{maximumFractionDigits:2});
-      }
-    }
-  }
-  document.getElementById('br_otA').textContent=br_otA;
-  document.getElementById('br_otW').textContent=br_otW;
+            // Calculate overtime requirements
+            if (otRate > 0) {
+                // Calculate marginal rate
+                const testGross = j1Gross + otRate;
+                const afterOT = calculatePayslipView(region, basePA, applyTaper, pensionPct, slPlan, testGross, j2Gross);
+                const marginalNet = afterOT.total.net - results.total.net;
+                const marginalRate = 1 - (marginalNet / otRate);
 
-  // Helpful hint if OT rate is missing
-  if(j1OTRate===0){
-    document.getElementById('br_notes').innerHTML =
-      `Enter either Job 1 hours/week (so we can infer base hourly) or set an explicit “Overtime hourly rate” to calculate overtime.`;
-  } else {
-    document.getElementById('br_notes').innerHTML =
-      `Job 2 taxed at BR 20% in payroll (no Personal Allowance). NI & Student Loan computed per job. Table shows Annual and your selected period (${perKey}).`;
-  }
+                document.getElementById('br_otRate').textContent = formatCurrency(marginalNet);
+                document.getElementById('br_marginal').textContent = formatPercent(marginalRate);
 
-  // --- Year-end (combined) ---
-  const ye = all_yearEnd(region, basePA, taper, pensionPct, slPlan, j1Gross, j2Gross);
-  const ye_netPer = per(ye.net, perKey);
-  document.getElementById('ye_netA').textContent='£'+currency(ye.net);
-  document.getElementById('ye_netP').textContent='£'+currency(ye_netPer);
-  document.getElementById('ye_erNIA').textContent='£'+currency(ye.erNI);
-  document.getElementById('ye_erCostA').textContent='£'+currency(ye.employerCost);
+                if (targetAnnual > 0) {
+                    if (results.total.net >= targetAnnual) {
+                        document.getElementById('br_otA').textContent = '0';
+                        document.getElementById('br_otW').textContent = '0';
+                    } else {
+                        const needed = (targetAnnual - results.total.net) / marginalNet;
+                        document.getElementById('br_otA').textContent = needed.toFixed(1);
+                        document.getElementById('br_otW').textContent = (needed / 52).toFixed(1);
+                    }
+                }
+            }
+        }
 
-  const yeRows = [
-    ['Job 1 gross', ye.parts.j1.gross],
-    ['Job 1 employee NI', ye.parts.j1.eeNI],
-    ['Job 1 pension (sacrifice)', ye.parts.j1.salSac],
-    ['Job 1 employer NI', ye.parts.j1.erNI],
-    ['Job 2 gross', ye.parts.j2.gross],
-    ['Job 2 employee NI', ye.parts.j2.eeNI],
-    ['Job 2 pension (sacrifice)', ye.parts.j2.salSac],
-    ['Job 2 employer NI', ye.parts.j2.erNI],
-    ['Total gross (both jobs)', ye.totalGross],
-    ['Combined income tax (true bands)', ye.IT],
-    ['Total employee NI (both jobs)', ye.eeNI],
-    ['Student loan (combined)', ye.sl],
-    ['Total pension (sacrifice)', ye.salSac],
-    ['Personal Allowance used', ye.PA]
-  ];
-  document.getElementById('ye_rows').innerHTML = yeRows.map(([k,v]) =>
-    `<tr><td>${k}</td><td class="right">£${currency(v||0)}</td><td class="right">£${currency(per(v||0, perKey))}</td></tr>`
-  ).join('');
-  document.getElementById('ye_netPT').textContent='£'+currency(ye_netPer);
+        function displayYearEndResults(results, period, otRate, targetAnnual, j1Gross, j2Gross, region, basePA, applyTaper, pensionPct, slPlan) {
+            const periodDiv = PERIODS[period];
+            
+            // Update summary cards
+            document.getElementById('ye_netA').textContent = formatCurrency(results.total.net);
+            document.getElementById('ye_netP').textContent = formatCurrency(results.total.net / periodDiv);
+            document.getElementById('ye_erNI').textContent = formatCurrency(results.total.erNI);
+            document.getElementById('ye_erCost').textContent = formatCurrency(results.employerCost);
 
-  // Net per OT hour & marginal (YE)
-  if(j1OTRate>0){
-    const before=ye.net;
-    const after=all_yearEnd(region, basePA, taper, pensionPct, slPlan, j1Gross+j1OTRate, j2Gross).net;
-    const keep=after-before; const mr=Math.max(0,Math.min(1,1-(keep/j1OTRate)));
-    document.getElementById('ye_netPerOT').textContent='£'+currency(keep);
-    document.getElementById('ye_marginal').textContent=pct(mr);
-  } else {
-    document.getElementById('ye_netPerOT').textContent='—';
-    document.getElementById('ye_marginal').textContent='—';
-  }
+            // Build table rows
+            const rows = [
+                ['Combined Gross Salary', results.total.gross],
+                ['Personal Allowance Used', -results.effectivePA],
+                ['Combined Income Tax', results.total.tax],
+                ['Total National Insurance', results.total.ni],
+                ['Student Loan Repayment', results.total.sl],
+                ['Total Pension (Sacrifice)', results.total.pension],
+                ['', null],
+                ['<b>Total Deductions</b>', results.total.pension + results.total.tax + results.total.ni + results.total.sl],
+                ['<b>Net Take-Home</b>', results.total.net]
+            ];
 
-  // OT needed (YE)
-  let ye_otA='—', ye_otW='—';
-  if(targetAnnual>0){
-    if(ye.net>=targetAnnual){ ye_otA='0.00'; ye_otW='0.00'; }
-    else if(j1OTRate>0){
-      const req=solveGrossForTarget(wrapYE({region,basePA,taper,pensionPct,slPlan,j2Gross}), j1Gross, targetAnnual);
-      if(req!=null){
-        const extra=req - j1Gross;
-        ye_otA=(extra/j1OTRate).toLocaleString(undefined,{maximumFractionDigits:2});
-        ye_otW=(extra/j1OTRate/52).toLocaleString(undefined,{maximumFractionDigits:2});
-      }
-    }
-  }
-  document.getElementById('ye_otA').textContent=ye_otA;
-  document.getElementById('ye_otW').textContent=ye_otW;
+            const tbody = document.getElementById('ye_tbody');
+            tbody.innerHTML = rows.map(([label, value]) => {
+                if (value === null) return '<tr><td colspan="3">&nbsp;</td></tr>';
+                return `
+                    <tr>
+                        <td>${label}</td>
+                        <td class="text-right">${formatCurrency(Math.abs(value))}</td>
+                        <td class="text-right">${formatCurrency(Math.abs(value) / periodDiv)}</td>
+                    </tr>
+                `;
+            }).join('');
 
-  // Helpful hint if OT rate is missing
-  if(j1OTRate===0){
-    document.getElementById('ye_notes').innerHTML =
-      `Enter either Job 1 hours/week (so we can infer base hourly) or set an explicit “Overtime hourly rate” to calculate overtime.`;
-  } else {
-    document.getElementById('ye_notes').innerHTML = '';
-  }
-}
+            // Calculate overtime requirements
+            if (otRate > 0) {
+                // Calculate marginal rate
+                const testGross = j1Gross + otRate;
+                const afterOT = calculateYearEndView(region, basePA, applyTaper, pensionPct, slPlan, testGross, j2Gross);
+                const marginalNet = afterOT.total.net - results.total.net;
+                const marginalRate = 1 - (marginalNet / otRate);
 
-// Auto-calc on load if hash present
-window.addEventListener('load', calc);
-</script>
+                document.getElementById('ye_otRate').textContent = formatCurrency(marginalNet);
+                document.getElementById('ye_marginal').textContent = formatPercent(marginalRate);
+
+                if (targetAnnual > 0) {
+                    if (results.total.net >= targetAnnual) {
+                        document.getElementById('ye_otA').textContent = '0';
+                        document.getElementById('ye_otW').textContent = '0';
+                    } else {
+                        const needed = (targetAnnual - results.total.net) / marginalNet;
+                        document.getElementById('ye_otA').textContent = needed.toFixed(1);
+                        document.getElementById('ye_otW').textContent = (needed / 52).toFixed(1);
+                    }
+                }
+            }
+        }
+
+        // Initialize on load
+        window.addEventListener('load', () => {
+            syncJ2Mode();
+            calculate();
+        });
+    </script>
 </body>
 </html>
